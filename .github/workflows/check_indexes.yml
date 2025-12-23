@@ -1,6 +1,6 @@
 name: Check Indexes
 on:
-  pull_request:
+  push:
     paths:
       - 'db/migrate/**.rb'
 
