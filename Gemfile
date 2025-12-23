@@ -3,6 +3,7 @@ source "https://rubygems.org"
 ruby file: ".tool-versions"
 gem "rails", "8.1.1"
 
+gem "bcrypt", "3.1.20", require: false
 gem "bootsnap", "1.19.0", require: false
 gem "image_processing", "1.14.0"
 gem "importmap-rails", "2.2.2"
@@ -11,13 +12,17 @@ gem "kamal", require: false
 gem "pg", "1.6.2"
 gem "propshaft", "1.3.1"
 gem "puma", "7.1.0"
+gem "rodauth-rails", "2.1.2"
+gem "sequel-activerecord_connection", "2.0.1", require: false
 gem "solid_cable", "3.0.12"
 gem "solid_cache", "1.0.10"
 gem "solid_queue", "1.2.4"
 gem "stimulus-rails", "1.3.4"
 gem "thruster", "0.1.17", require: false
+gem "tilt", "2.4.0", require: false
 gem "turbo-rails", "2.0.20"
 gem "tzinfo-data", "1.2025.3"
+gem "webauthn", "3.4.3"
 
 group :development do
   gem "brakeman", "7.1.1", require: false

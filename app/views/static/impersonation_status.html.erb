@@ -1,0 +1,24 @@
+<div class="container mt-3">
+  <% if current_user != true_user %>
+    <div class="alert alert-warning d-flex align-items-center" role="alert">
+      <i class="bi bi-person-fill-lock me-2"></i>
+      <div>
+        You (<strong><%= true_user.full_name %></strong>) are signed in as <strong><%= current_user.full_name %></strong>
+        <div class="mt-2">
+          <%= link_to stop_impersonating_admin_users_path, 
+              class: "btn btn-outline-danger btn-sm",
+              data: { turbo: true, turbo_method: :post } do %>
+            <i class="bi bi-box-arrow-left me-1"></i>Stop Impersonating
+          <% end %>
+        </div>
+      </div>
+    </div>
+  <% else %>
+    <div class="alert alert-info d-flex align-items-center" role="alert">
+      <i class="bi bi-person-circle me-2"></i>
+      <div>
+        You are signed in as <strong><%= current_user.full_name if current_user %></strong>
+      </div>
+    </div>
+  <% end %>
+</div>
