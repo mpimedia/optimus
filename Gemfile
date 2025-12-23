@@ -19,18 +19,33 @@ gem "thruster", "0.1.17", require: false
 gem "turbo-rails", "2.0.20"
 gem "tzinfo-data", "1.2025.3"
 
-group :development, :test do
+group :development do
   gem "brakeman", "7.1.1", require: false
-  gem "bundler-audit", "0.9.3", require: false
-  gem "debug", "1.11.1"
-  gem "rubocop-rails-omakase", require: false
+  gem "bullet", "8.1.0"
+  gem "web-console", "4.2.1"
 end
 
-group :development do
-  gem "web-console", "4.2.1"
+group :development, :test do
+  gem "bundler-audit", "0.9.3", require: false
+  gem "debug", "1.11.1"
+  gem "factory_bot_rails", "6.5.1"
+  gem "rspec-rails", "8.0.2"
+  gem "rubocop-capybara", "2.22.1", require: false
+  gem "rubocop-factory_bot", "2.28.0", require: false
+  gem "rubocop-rails-omakase", require: false
+  gem "rubocop-rspec", "3.8.0", require: false
+  gem "rubocop-rspec_rails", "2.32.0", require: false
 end
 
 group :test do
   gem "capybara", "3.40.0"
+  gem "database_cleaner-active_record", "2.2.2"
+  gem "rails-controller-testing", "1.0.5"
+  gem "rspec-github", "3.0.0", require: false
+  gem "rspec-instafail", "1.0.0", require: false
+  gem "rspec-json_expectations", "2.2.0"
+  gem "rspec_junit_formatter", "0.6.0"
+  gem "rspec-longrun", "3.1.0"
   gem "selenium-webdriver", "4.39.0"
+  gem "shoulda-matchers", "7.0.1"
 end
