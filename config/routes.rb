@@ -12,4 +12,6 @@ Rails.application.routes.draw do
   # Defines the root path route ("/")
   # root "posts#index"
   root to: "static#index"
+
+  get "/account/security", to: "account_security#show"
 end

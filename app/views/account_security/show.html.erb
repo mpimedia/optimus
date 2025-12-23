@@ -1,0 +1,12 @@
+<!-- app/views/account_security/show.html.erb -->
+<h1 class="text-2xl font-bold">Account security</h1>
+
+<p class="mt-4">
+  Passkeys let you sign in using your device (Face ID / Touch ID / Windows Hello).
+</p>
+
+<div class="mt-6 flex flex-col gap-3">
+  <%= link_to "Add a passkey", rodauth.webauthn_setup_path, class: "underline" %>
+  <%= link_to "Manage/remove passkeys", rodauth.webauthn_remove_path, class: "underline" %>
+  <%= link_to "Change password", rodauth.change_password_path, class: "underline" %>
+</div>

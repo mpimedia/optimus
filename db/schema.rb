@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_12_23_215325) do
+ActiveRecord::Schema[8.1].define(version: 2025_12_23_225139) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
@@ -51,6 +51,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_23_215325) do
   create_table "account_webauthn_keys", primary_key: ["account_id", "webauthn_id"], force: :cascade do |t|
     t.bigint "account_id", null: false
     t.datetime "last_use", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.string "nickname"
     t.string "public_key", null: false
     t.integer "sign_count", null: false
     t.string "webauthn_id", null: false

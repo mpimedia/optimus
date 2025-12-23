@@ -1,3 +1,49 @@
 <%== rodauth.login_form_header %>
 <%= render "login_form" %>
 <%== rodauth.login_form_footer %>
+
+<div class="mt-4">
+  <% flash.each do |type, msg| %>
+    <div class="alert alert-<%= type == "notice" ? "success" : "danger" %>"><%= msg %></div>
+  <% end %>
+
+  <div class="card">
+    <div class="card-body">
+      <h2 class="h6 card-title mb-3">Trouble signing in?</h2>
+
+      <ul class="list-unstyled mb-0">
+        <%# Password recovery (email reset) %>
+        <% if rodauth.respond_to?(:reset_password_request_path) %>
+          <li class="mb-2">
+            <%= link_to "Forgot your password? Reset it by email",
+                        rodauth.reset_password_request_path,
+                        class: "link-primary" %>
+          </li>
+        <% end %>
+
+        <%# Confirmation email resend %>
+        <% if rodauth.respond_to?(:verify_account_resend_path) %>
+          <li class="mb-2">
+            <%= link_to "Didn’t get the confirmation email? Resend it",
+                        rodauth.verify_account_resend_path,
+                        class: "link-primary" %>
+          </li>
+        <% end %>
+
+        <%# Lockout unlock flow (enabled by :lockout) %>
+        <% if rodauth.respond_to?(:unlock_account_request_path) %>
+          <li class="mb-2">
+            <%= link_to "Locked out after failed sign-ins? Unlock by email",
+                        rodauth.unlock_account_request_path,
+                        class: "link-primary" %>
+          </li>
+        <% end %>
+      </ul>
+
+      <div class="text-muted small mt-3">
+        If you enrolled passkeys and lost access to a device, you can still sign in with your password.
+        If you forgot your password, use the reset link above.
+      </div>
+    </div>
+  </div>
+</div>

@@ -61,7 +61,7 @@ Rails.application.configure do
   config.action_mailer.default_url_options = { host: "wrburgess.com" }
   config.action_mailer.delivery_method = :postmark
   config.action_mailer.smtp_settings = {
-    api_token: Rails.application.credentials.postmark.api_token
+    api_token: Rails.application.credentials.dig(:postmark, :api_token)
   }
 
   # Specify outgoing SMTP server. Remember to add smtp/* credentials via bin/rails credentials:edit.
