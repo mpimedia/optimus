@@ -3,7 +3,7 @@ source "https://rubygems.org"
 ruby file: ".tool-versions"
 gem "rails", "8.1.1"
 
-gem "bootsnap", "1.19.0", require: false
+gem "bootsnap", "1.20.1", require: false
 gem "image_processing", "1.14.0"
 gem "importmap-rails", "2.2.2"
 gem "jbuilder", "2.14.1"
@@ -20,7 +20,7 @@ gem "turbo-rails", "2.0.20"
 gem "tzinfo-data", "1.2025.3"
 
 group :development do
-  gem "brakeman", "7.1.1", require: false
+  gem "brakeman", "7.1.2", require: false
   gem "bullet", "8.1.0"
   gem "web-console", "4.2.1"
 end
