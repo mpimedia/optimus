@@ -20,6 +20,7 @@ Rails.application.configure do
 
   # Show full error reports.
   config.consider_all_requests_local = true
+  config.action_controller.perform_caching = false
   config.cache_store = :null_store
 
   # Render exception templates for rescuable exceptions and raise for other exceptions.
@@ -37,7 +38,9 @@ Rails.application.configure do
   config.action_mailer.delivery_method = :test
 
   # Set host to be used by links generated in mailer templates.
-  config.action_mailer.default_url_options = { host: "example.com" }
+  # config.action_mailer.default_url_options = { host: "example.com" }
+  # For devise
+  config.action_mailer.default_url_options = { host: "localhost", port: 3000 }
 
   # Print deprecation notices to the stderr.
   config.active_support.deprecation = :stderr
