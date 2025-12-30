@@ -9,6 +9,7 @@ gem "image_processing", "1.14.0"
 gem "importmap-rails", "2.2.2"
 gem "jbuilder", "2.14.1"
 gem "kamal", require: false
+gem "good_job", "4.13.1"
 gem "pg", "1.6.3"
 gem "propshaft", "1.3.1"
 gem "puma", "7.1.0"
