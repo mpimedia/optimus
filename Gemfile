@@ -5,14 +5,20 @@ gem "rails", "8.1.1"
 
 gem "blazer", "3.3.0"
 gem "bootsnap", "1.20.1", require: false
+gem "caxlsx_rails", "0.6.4"
 gem "devise", "4.9.4"
+gem "foreman", "0.90.0"
+gem "good_job", "4.13.1"
 gem "image_processing", "1.14.0"
 gem "importmap-rails", "2.2.2"
 gem "jbuilder", "2.14.1"
-gem "caxlsx_rails", "0.6.4"
+gem "jsbundling-rails", "1.3.1"
+gem "jwt", "3.1.2"
 gem "kamal", require: false
-gem "good_job", "4.13.1"
+gem "maintenance_tasks", "2.13.0"
+gem "pagy", "43.2.2"
 gem "pg", "1.6.3"
+gem "pghero", "3.7.0"
 gem "propshaft", "1.3.1"
 gem "puma", "7.1.0"
 gem "pundit", "2.5.2"
@@ -35,6 +41,7 @@ group :development, :test do
   gem "bundler-audit", "0.9.3", require: false
   gem "debug", "1.11.1"
   gem "factory_bot_rails", "6.5.1"
+  gem "faker", "3.5.3"
   gem "rspec-rails", "8.0.2"
   gem "rubocop-capybara", "2.22.1", require: false
   gem "rubocop-factory_bot", "2.28.0", require: false

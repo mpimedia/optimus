@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  mount MaintenanceTasks::Engine, at: "/maintenance_tasks"
   devise_for :users
 
   root to: "static#home"

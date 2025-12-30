@@ -1,4 +1,6 @@
 module ApplicationHelper
+  include Pagy::Frontend
+
   def file_name_with_timestamp(file_name:, file_extension:)
     "#{file_name}_#{DateTime.now.strftime('%Y-%m-%d_%H-%M-%S')}.#{file_extension}"
   end
