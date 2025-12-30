@@ -45,9 +45,9 @@ module Maintenance
     private
 
     def find_system_management_role
-      role = SystemRole.find_by(name: 'System Management')
+      role = SystemRole.find_by(name: "System Management")
       unless role
-        puts 'ERROR: System Management role not found. Please create it first.'
+        puts "ERROR: System Management role not found. Please create it first."
         return nil
       end
       role
@@ -55,14 +55,14 @@ module Maintenance
 
     def models_to_scan
       # Get all model files from app/models
-      model_files = Dir[Rails.root.join('app', 'models', '*.rb')]
+      model_files = Dir[Rails.root.join("app", "models", "*.rb")]
 
       models = model_files.map do |file|
         # Extract class name from filename
-        class_name = File.basename(file, '.rb').camelize
+        class_name = File.basename(file, ".rb").camelize
 
         # Skip ApplicationRecord and other base classes
-        next if ['ApplicationRecord'].include?(class_name)
+        next if [ "ApplicationRecord" ].include?(class_name)
 
         # Try to constantize the class
         begin
@@ -93,29 +93,29 @@ module Maintenance
 
       # Create better abbreviations
       abbreviation = case resource
-                     when 'Organization'
+      when "Organization"
                        "ORG #{operation.upcase}"
-                     when 'User'
+      when "User"
                        "USR #{operation.upcase}"
-                     when 'Contact'
+      when "Contact"
                        "CON #{operation.upcase}"
-                     when 'OrganizationUser'
+      when "OrganizationUser"
                        "OU #{operation.upcase}"
-                     when 'SystemPermission'
+      when "SystemPermission"
                        "SP #{operation.upcase}"
-                     when 'SystemRole'
+      when "SystemRole"
                        "SR #{operation.upcase}"
-                     when 'SystemGroup'
+      when "SystemGroup"
                        "SG #{operation.upcase}"
-                     when 'ExternalApplication'
+      when "ExternalApplication"
                        "EA #{operation.upcase}"
-                     when 'InboundRequestLog'
+      when "InboundRequestLog"
                        "IRL #{operation.upcase}"
-                     else
+      else
                        # For other models, use first letter of each capital letter
                        resource_abbrev = resource.scan(/[A-Z]/).join
                        "#{resource_abbrev} #{operation.upcase}"
-                     end
+      end
 
       # Check if permission already exists
       existing_permission = SystemPermission.find_by(resource: resource, operation: operation)

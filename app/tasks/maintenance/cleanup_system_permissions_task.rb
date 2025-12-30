@@ -19,7 +19,7 @@ module Maintenance
       merged_permissions = []
       deleted_count = 0
 
-      puts 'Starting SystemPermission cleanup...'
+      puts "Starting SystemPermission cleanup..."
 
       # Step 1: Fix naming and abbreviations for all permissions
       SystemPermission.find_each do |permission|
@@ -48,7 +48,7 @@ module Maintenance
         deleted_count += 1
       end
 
-      puts 'Task completed successfully!'
+      puts "Task completed successfully!"
       puts "- Fixed #{fixed_permissions.count} permission formats"
       puts "- Merged #{merged_permissions.count} duplicate groups"
       puts "- Deleted #{deleted_count} duplicate/invalid records"
@@ -69,7 +69,7 @@ module Maintenance
     def find_duplicate_groups
       # Find all resource/operation combinations that have multiple records
       duplicate_keys = SystemPermission.group(:resource, :operation)
-                                       .having('count(*) > 1')
+                                       .having("count(*) > 1")
                                        .count
                                        .keys
 
@@ -87,7 +87,7 @@ module Maintenance
 
       # Choose the "best" permission as primary (most complete record)
       primary = choose_primary_permission(duplicate_permissions)
-      duplicates = duplicate_permissions - [primary]
+      duplicates = duplicate_permissions - [ primary ]
 
       puts "Merging #{duplicate_permissions.size} duplicates for #{primary.resource} #{primary.operation}"
 
@@ -168,73 +168,73 @@ module Maintenance
 
     def generate_correct_abbreviation(resource, operation)
       resource_abbrev = case resource
-                        when 'Organization'
-                          'ORG'
-                        when 'User'
-                          'USR'
-                        when 'Contact'
-                          'CON'
-                        when 'OrganizationUser'
-                          'OU'
-                        when 'SystemPermission'
-                          'SP'
-                        when 'SystemRole'
-                          'SR'
-                        when 'SystemGroup'
-                          'SG'
-                        when 'ExternalApplication'
-                          'EA'
-                        when 'InboundRequestLog'
-                          'IRL'
-                        when 'DataLog'
-                          'DL'
-                        when 'MaintenanceTasksRun'
-                          'MTR'
-                        when 'SystemGroupSystemRole'
-                          'SGSR'
-                        when 'SystemGroupUser'
-                          'SGU'
-                        when 'SystemRoleSystemPermission'
-                          'SRSP'
-                        else
+      when "Organization"
+                          "ORG"
+      when "User"
+                          "USR"
+      when "Contact"
+                          "CON"
+      when "OrganizationUser"
+                          "OU"
+      when "SystemPermission"
+                          "SP"
+      when "SystemRole"
+                          "SR"
+      when "SystemGroup"
+                          "SG"
+      when "ExternalApplication"
+                          "EA"
+      when "InboundRequestLog"
+                          "IRL"
+      when "DataLog"
+                          "DL"
+      when "MaintenanceTasksRun"
+                          "MTR"
+      when "SystemGroupSystemRole"
+                          "SGSR"
+      when "SystemGroupUser"
+                          "SGU"
+      when "SystemRoleSystemPermission"
+                          "SRSP"
+      else
                           # For other models, use first letter of each capital letter
                           resource.scan(/[A-Z]/).join
-                        end
+      end
 
       operation_abbrev = case operation.downcase
-                         when 'create'
-                           'CRE'
-                         when 'index'
-                           'IDX'
-                         when 'show'
-                           'SHO'
-                         when 'edit'
-                           'EDT'
-                         when 'update'
-                           'UPD'
-                         when 'destroy'
-                           'DEL'
-                         when 'copy'
-                           'CPY'
-                         when 'archive'
-                           'ARC'
-                         when 'unarchive'
-                           'UNA'
-                         when 'collection_export_xlsx'
-                           'CEX'
-                         when 'member_export_xlsx'
-                           'MEX'
-                         when 'import'
-                           'IMP'
-                         when 'export_example'
-                           'EEX'
-                         when 'new'
-                           'NEW'
-                         when 'share'
-                           'SHA'
-                         else
+      when "create"
+                           "CRE"
+      when "index"
+                           "IDX"
+      when "show"
+                           "SHO"
+      when "edit"
+                           "EDT"
+      when "update"
+                           "UPD"
+      when "destroy"
+                           "DEL"
+      when "copy"
+                           "CPY"
+      when "archive"
+                           "ARC"
+      when "unarchive"
+                           "UNA"
+      when "collection_export_xlsx"
+                           "CEX"
+      when "member_export_xlsx"
+                           "MEX"
+      when "import"
+                           "IMP"
+      when "export_example"
+                           "EEX"
+      when "new"
+                           "NEW"
+      when "share"
+                           "SHA"
+      else
                            operation.upcase.slice(0, 3)
-                         end
+      end
 
       "#{resource_abbrev} #{operation_abbrev}"
     end
