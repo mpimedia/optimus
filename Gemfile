@@ -36,7 +36,6 @@ gem "solid_queue", "1.2.4"
 gem "stimulus-rails", "1.3.4"
 gem "thruster", "0.1.17", require: false
 gem "turbo-rails", "2.0.20"
-gem "tzinfo-data", "1.2025.3"
 gem "view_component", "4.1.1"
 
 group :development, :staging do

@@ -1,3 +1,5 @@
+return unless defined?(RailsDb)
+
 RailsDb.setup do |config|
   # config.http_basic_authentication_enabled = true
   # config.http_basic_authentication_user_name = ENV.fetch("RAILS_DB_USER", "admin")
