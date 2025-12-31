@@ -4,7 +4,6 @@ module DataLogActionTypes
   DELETED = "deleted".freeze
   DUPLICATED = "duplicated".freeze
   SHARED = "shared".freeze
-  SYNC_ON_GARDEN = "sync on garden".freeze
   UPDATED = "updated".freeze
   UPDATED_BY_COPY = "updated by copy".freeze
   VIEWED = "viewed".freeze
@@ -16,7 +15,6 @@ module DataLogActionTypes
       DataLogActionTypes::DELETED,
       DataLogActionTypes::DUPLICATED,
       DataLogActionTypes::SHARED,
-      DataLogActionTypes::SYNC_ON_GARDEN,
       DataLogActionTypes::UPDATED,
       DataLogActionTypes::UPDATED_BY_COPY,
       DataLogActionTypes::VIEWED

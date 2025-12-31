@@ -4,18 +4,18 @@ describe Admin::ActionButton::Component, type: :component do
   include_context 'component_setup'
 
   describe '#render' do
-    let(:link) { create(:link) }
+    let(:user) { create(:user) }
 
     before do
       sign_in(user)
     end
 
     it 'renders a cancel_to_index action button' do
-      component = described_class.new(operation: :cancel_to_index, instance: link, public: true)
+      component = described_class.new(operation: :cancel_to_index, instance: user, public: true)
       render_inline(component)
 
       expect(page).to have_text('Cancel')
-      expect(page).to have_link(nil, href: '/admin/links')
+      expect(page).to have_link(nil, href: '/admin/users')
       expect(page).to have_css('.btn-secondary')
       expect(page).to have_css('.bi-x-octagon')
 
@@ -26,7 +26,7 @@ describe Admin::ActionButton::Component, type: :component do
     end
 
     it 'renders a cancel_to_show action button' do
-      component = described_class.new(operation: :cancel_to_show, instance: link, public: true)
+      component = described_class.new(operation: :cancel_to_show, instance: user, public: true)
       render_inline(component)
 
       expect(page).to have_text('Cancel')

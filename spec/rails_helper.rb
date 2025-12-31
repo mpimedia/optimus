@@ -87,6 +87,10 @@ RSpec.configure do |config|
     Warden.test_reset!
   end
 
+  config.before(:each, type: :component) do
+    @request = vc_test_controller.request
+  end
+
   # You can uncomment this line to turn off ActiveRecord support entirely.
   # config.use_active_record = false
 

@@ -45,8 +45,7 @@ describe Admin::NavBar::Component, type: :component do
     it 'renders multiple nav items' do
       render_inline(component)
 
-      expect(page).to have_text('Garden')
-      expect(page).to have_text('Websites')
+      expect(page).to have_text('Optimus')
     end
   end
 end

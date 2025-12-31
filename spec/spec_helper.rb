@@ -62,7 +62,7 @@ RSpec.configure do |config|
   # Limits the available syntax to the non-monkey patched syntax that is
   # recommended. For more details, see:
   # https://rspec.info/features/3-12/rspec-core/configuration/zero-monkey-patching-mode/
-  config.disable_monkey_patching!
+  # Leave monkey patching enabled so shorthand DSL like `describe` works.
 
   # Many RSpec users commonly either run the entire suite or an individual
   # file, and it's useful to allow more verbose output when running an

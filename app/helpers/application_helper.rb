@@ -24,4 +24,12 @@ module ApplicationHelper
 
     link_to(name, url, default_options.merge(options))
   end
+
+  def boolean_badge(bool)
+    if bool
+      content_tag(:span, class: "badge bg-primary") { "Yes" }
+    else
+      content_tag(:span, class: "badge bg-secondary") { "No" }
+    end
+  end
 end

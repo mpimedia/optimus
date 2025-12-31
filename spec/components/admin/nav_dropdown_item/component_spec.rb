@@ -9,7 +9,7 @@ describe Admin::NavDropdownItem::Component, type: :component do
 
   it 'renders a nav item dropdown item if the resource index policy allows it for the current user' do
     allow(Pundit).to receive(:policy).and_return(double('policy', index?: true))
-    render_inline(described_class.new(name: 'Dropdown Item', path: '/dropdown_path', resource: Link))
+    render_inline(described_class.new(name: 'Dropdown Item', path: '/dropdown_path', resource: User))
     expect(page).to have_css('li a.dropdown-item')
     expect(page).to have_link(text: 'Dropdown Item', href: '/dropdown_path')
   end

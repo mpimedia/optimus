@@ -1,5 +1,6 @@
 Rails.application.routes.draw do
-  mount MaintenanceTasks::Engine, at: "/maintenance_tasks"
+  draw :external_urls
+
   devise_for :users
 
   root to: "static#home"
@@ -49,6 +50,7 @@ Rails.application.routes.draw do
       mount RailsDb::Engine, at: "/rails/db", as: :rails_db
     end
 
+    resources :data_logs, only: [:index, :show], concerns: :member_exportable
     resources :system_groups, concerns: :collection_exportable
     resources :system_permissions, concerns: [:copyable, :collection_exportable]
     resources :system_roles, concerns: :collection_exportable
