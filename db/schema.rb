@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_12_30_234323) do
+ActiveRecord::Schema[8.1].define(version: 2025_12_30_235500) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
@@ -87,6 +87,20 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_30_234323) do
     t.string "status"
     t.datetime "updated_at", null: false
     t.index ["creator_id"], name: "index_blazer_queries_on_creator_id"
+  end
+
+  create_table "data_logs", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "loggable_id", null: false
+    t.string "loggable_type", null: false
+    t.jsonb "meta"
+    t.text "note"
+    t.string "operation"
+    t.jsonb "original_data"
+    t.datetime "updated_at", null: false
+    t.bigint "user_id"
+    t.index ["loggable_type", "loggable_id"], name: "index_data_logs_on_loggable"
+    t.index ["user_id"], name: "index_data_logs_on_user_id"
   end
 
   create_table "good_job_batches", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -201,6 +215,62 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_30_234323) do
     t.index ["task_name", "status", "created_at"], name: "index_maintenance_tasks_runs", order: { created_at: :desc }
   end
 
+  create_table "system_group_system_roles", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "system_group_id"
+    t.bigint "system_role_id"
+    t.datetime "updated_at", null: false
+    t.index ["system_group_id"], name: "index_system_group_system_roles_on_system_group_id"
+    t.index ["system_role_id"], name: "index_system_group_system_roles_on_system_role_id"
+  end
+
+  create_table "system_group_users", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "system_group_id"
+    t.datetime "updated_at", null: false
+    t.bigint "user_id"
+    t.index ["system_group_id"], name: "index_system_group_users_on_system_group_id"
+    t.index ["user_id"], name: "index_system_group_users_on_user_id"
+  end
+
+  create_table "system_groups", force: :cascade do |t|
+    t.string "abbreviation"
+    t.datetime "created_at", null: false
+    t.string "description"
+    t.string "name"
+    t.text "notes"
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "system_permissions", force: :cascade do |t|
+    t.string "abbreviation"
+    t.datetime "created_at", null: false
+    t.string "description"
+    t.string "name"
+    t.text "notes"
+    t.string "operation"
+    t.string "resource"
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "system_role_system_permissions", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "system_permission_id"
+    t.bigint "system_role_id"
+    t.datetime "updated_at", null: false
+    t.index ["system_permission_id"], name: "index_system_role_system_permissions_on_system_permission_id"
+    t.index ["system_role_id"], name: "index_system_role_system_permissions_on_system_role_id"
+  end
+
+  create_table "system_roles", force: :cascade do |t|
+    t.string "abbreviation"
+    t.datetime "created_at", null: false
+    t.string "description"
+    t.string "name"
+    t.text "notes"
+    t.datetime "updated_at", null: false
+  end
+
   create_table "team_users", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "role", default: "member", null: false
@@ -230,13 +300,18 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_30_234323) do
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
     t.integer "failed_attempts", default: 0, null: false
+    t.string "first_name"
+    t.string "last_name"
     t.datetime "last_sign_in_at"
     t.string "last_sign_in_ip"
     t.datetime "locked_at"
+    t.string "phone_number"
+    t.string "prefix"
     t.datetime "remember_created_at"
     t.datetime "reset_password_sent_at"
     t.string "reset_password_token"
     t.integer "sign_in_count", default: 0, null: false
+    t.string "suffix"
     t.string "unconfirmed_email"
     t.string "unlock_token"
     t.datetime "updated_at", null: false
@@ -248,6 +323,13 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_30_234323) do
 
   add_foreign_key "account_users", "accounts"
   add_foreign_key "account_users", "users"
+  add_foreign_key "data_logs", "users"
+  add_foreign_key "system_group_system_roles", "system_groups"
+  add_foreign_key "system_group_system_roles", "system_roles"
+  add_foreign_key "system_group_users", "system_groups"
+  add_foreign_key "system_group_users", "users"
+  add_foreign_key "system_role_system_permissions", "system_permissions"
+  add_foreign_key "system_role_system_permissions", "system_roles"
   add_foreign_key "team_users", "teams"
   add_foreign_key "team_users", "users"
   add_foreign_key "teams", "accounts"
