@@ -37,24 +37,17 @@ Rails.application.routes.draw do
   namespace :admin do
     root to: "dashboard#index"
 
-    # authenticate :user, lambda { |u| u.admin? } do
-    #   mount Blazer::Engine, at: :blazer
-    #   mount GoodJob::Engine, at: :good_job
-    #   mount MaintenanceTasks::Engine, at: :maintenance_tasks
-    #   mount PgHero::Engine, at: :pghero
-    # end
+    authenticate :user, lambda { |u| u.admin? } do
+      mount Blazer::Engine, at: :blazer
+      mount GoodJob::Engine, at: :good_job
+      mount MaintenanceTasks::Engine, at: :maintenance_tasks
+      mount PgHero::Engine, at: :pghero
+    end
 
-    # if Rails.env.development? || Rails.env.staging?
-    #   authenticate :user, lambda { |u| u.admin? } do
-    #     mount RailsDb::Engine, at: "/rails/db", as: :rails_db
-    #   end
-    # end
-
-    # if Rails.env.development?
-    #   authenticate :user, lambda { |u| u.admin? } do
-    #     mount Lookbook::Engine, at: :lookbook
-    #   end
-    # end
+    if Rails.env.development? || Rails.env.staging?
+      mount Lookbook::Engine, at: :lookbook
+      mount RailsDb::Engine, at: "/rails/db", as: :rails_db
+    end
 
     resources :system_groups, concerns: :collection_exportable
     resources :system_permissions, concerns: [:copyable, :collection_exportable]
