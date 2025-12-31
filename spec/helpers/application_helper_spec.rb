@@ -203,7 +203,7 @@ describe ApplicationHelper, type: :helper do
       end
 
       it 'returns the instance template and a warning icon if the instance template validator is not valid' do
-        validator = instance_double(validator_class, valid?: false, errors: ['full name is missing'])
+        validator = instance_double(validator_class, valid?: false, errors: [ 'full name is missing' ])
         allow(site_page).to receive(:template_validator).and_return(validator)
 
         expect(helper.page_template_check(site_page)).to include(site_page.template)
@@ -227,7 +227,7 @@ describe ApplicationHelper, type: :helper do
       end
 
       it 'returns the instance theme path and a warning icon if the instance template validator is not valid' do
-        validator = instance_double(validator_class, valid?: false, errors: ['full name is missing'])
+        validator = instance_double(validator_class, valid?: false, errors: [ 'full name is missing' ])
         allow(landing_page).to receive(:template_validator).and_return(validator)
 
         expect(helper.page_template_check(landing_page)).to include(landing_page.theme_path)
@@ -253,7 +253,7 @@ describe ApplicationHelper, type: :helper do
     end
 
     it 'returns the validation errors if the instance template validator has any errors' do
-      validator = instance_double(template_validator_class, valid?: false, errors: ['full name is missing', 'hero image is missing'])
+      validator = instance_double(template_validator_class, valid?: false, errors: [ 'full name is missing', 'hero image is missing' ])
       allow(landing_page).to receive(:template_validator).and_return(validator)
 
       expect(helper.metadata_errors(landing_page)).to eq(validator.errors)
