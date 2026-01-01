@@ -3,7 +3,7 @@ Rails.application.routes.draw do
 
   devise_for :users
 
-  root to: "static#home"
+  root to: "static#index"
   get :up, to: "rails/health#show", as: :rails_health_check
 
   concern :archivable do
