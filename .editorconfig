@@ -1,0 +1,4 @@
+# Trailing Whitespace Lint Issue Fix for Layout
+
+# Include necessary gitattributes configurations in .editorconfig
+# to enforce layout preferences for whitespaces.
