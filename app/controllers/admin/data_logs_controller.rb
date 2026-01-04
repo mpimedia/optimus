@@ -15,7 +15,7 @@ class Admin::DataLogsController < AdminController
       SELECT
         data_logs.id,
         CONCAT(users.first_name, ' ', users.last_name) AS user,
-        UPPER(data_logs.action_type) AS action,
+        UPPER(data_logs.operation) AS action,
         data_logs.loggable_type AS model,
         data_logs.loggable_id AS model_id,
         data_logs.created_at AT TIME ZONE 'America/Chicago' AS created_at
