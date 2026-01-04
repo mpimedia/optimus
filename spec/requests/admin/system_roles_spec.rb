@@ -8,7 +8,7 @@ RSpec.describe Admin::SystemRolesController, type: :request do
       before do
         login_as(user, scope: :user)
         allow_any_instance_of(described_class).to receive(:authorize).and_return(true)
-        SystemRole.class_eval { attr_accessor :system_group_ids, :system_permission_ids } unless SystemRole.method_defined?(:system_group_ids)
+        SystemRole.class_eval { attr_accessor :system_group_ids, :system_permission_ids } unless SystemRole.method_defined?(:system_group_ids) && SystemRole.method_defined?(:system_permission_ids)
       end
 
       it "responds successfully to index" do
