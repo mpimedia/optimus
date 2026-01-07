@@ -9,7 +9,7 @@ jobs:
   update-gems:
     runs-on: ubuntu-latest
     env:
-      GH_TOKEN: ${{ github.token }}
+      GH_TOKEN: ${{ secrets.GHA_BOT }}
 
     steps:
       - name: Checkout repository
