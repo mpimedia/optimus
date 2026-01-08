@@ -1,7 +1,7 @@
 source "https://rubygems.org"
 
 ruby file: ".tool-versions"
-gem "rails", "8.1.1"
+gem "rails", "8.1.2"
 
 # global
 # gem install bundler
@@ -16,7 +16,7 @@ gem "devise", "4.9.4"
 gem "foreman", "0.90.0"
 gem "good_job", "4.13.1"
 gem "image_processing", "1.14.0"
-gem "importmap-rails", "2.2.2"
+gem "importmap-rails", "2.2.3"
 gem "jbuilder", "2.14.1"
 gem "jsbundling-rails", "1.3.1"
 gem "jwt", "3.1.2"
@@ -60,7 +60,7 @@ group :development, :test do
   gem "rubocop-capybara", "2.22.1", require: false
   gem "rubocop-factory_bot", "2.28.0", require: false
   gem "rubocop-rails-omakase", require: false
-  gem "rubocop-rspec", "3.8.0", require: false
+  gem "rubocop-rspec", "3.9.0", require: false
   gem "rubocop-rspec_rails", "2.32.0", require: false
 end
 
