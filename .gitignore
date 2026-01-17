@@ -44,3 +44,6 @@ spec/examples.txt
 
 # Claude Code local settings
 .claude/settings.local.json
+
+# MCP configuration (contains API keys)
+.mcp.json
