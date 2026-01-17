@@ -2,6 +2,32 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Setup After Cloning
+
+### MCP Configuration
+
+After cloning this repository, create a `.mcp.json` file in the project root to enable MCP (Model Context Protocol) servers. This file is gitignored because it contains API keys.
+
+Create `.mcp.json` with the following structure:
+
+```json
+{
+  "mcpServers": {
+    "context7": {
+      "type": "http",
+      "url": "https://mcp.context7.com/mcp",
+      "headers": {
+        "Authorization": "Bearer YOUR_CONTEXT7_API_KEY"
+      }
+    }
+  }
+}
+```
+
+Replace `YOUR_CONTEXT7_API_KEY` with your Context7 API key. You can obtain one from [Context7](https://context7.com).
+
+Context7 provides up-to-date documentation and code examples for programming libraries, which helps Claude Code give accurate, current answers about dependencies used in this project.
+
 ## Commands
 
 ```bash
