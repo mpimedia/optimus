@@ -41,3 +41,6 @@
 /node_modules
 
 spec/examples.txt
+
+# Claude Code local settings
+.claude/settings.local.json
