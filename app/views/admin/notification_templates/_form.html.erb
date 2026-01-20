@@ -5,15 +5,19 @@
         <%= f.input :id, readonly: true, wrapper: :floating_label_form %>
       <% end %>
       <%= f.input :notification_topic_id,
+          as: :tom_select,
           collection: NotificationTopic.options_for_select,
           label: 'Topic',
           prompt: 'Select a topic...',
-          wrapper: :floating_label_form %>
+          autocomplete: 'off',
+          wrapper: :tom_select_label_inset %>
       <%= f.input :distribution_method,
+          as: :tom_select,
           collection: NotificationTemplate.distribution_methods_for_select,
           label: 'Distribution Method',
           prompt: 'Select a method...',
-          wrapper: :floating_label_form %>
+          autocomplete: 'off',
+          wrapper: :tom_select_label_inset %>
       <%= f.input :active, as: :boolean, wrapper: :floating_label_form %>
       <%= f.input :subject_template, wrapper: :floating_label_form, hint: "ERB template for email subject. Example: Hello &lt;%= user.name %&gt;" %>
       <%= f.input :body_template, as: :text, wrapper: :floating_label_form, input_html: { rows: 10 }, hint: "ERB template for email body. Example: Hello &lt;%= user.name %&gt;" %>
