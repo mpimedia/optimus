@@ -119,6 +119,49 @@ Located in `app/components/` with namespace structure:
 - `Loggable` - Audit logging to `data_logs` table
 - `Notifiable` - Trigger notifications via Topic/Subscriber pattern
 
+### Enumerable Pattern
+
+For enumerable constants (status values, type options, categories):
+
+1. **Define constants in `app/modules/`** (e.g., `app/modules/order_statuses.rb`):
+   ```ruby
+   module OrderStatuses
+     PENDING = "pending".freeze
+     SHIPPED = "shipped".freeze
+     DELIVERED = "delivered".freeze
+
+     def self.all
+       [PENDING, SHIPPED, DELIVERED]
+     end
+
+     def self.options_for_select
+       all.map { |item| [item.titleize, item] }
+     end
+   end
+   ```
+
+2. **Create a concern in `app/models/concerns/`** that references the module (e.g., `has_order_status.rb`):
+   ```ruby
+   module HasOrderStatus
+     extend ActiveSupport::Concern
+
+     included do
+       validates :status, presence: true, inclusion: { in: OrderStatuses.all }
+     end
+
+     class_methods do
+       def statuses
+         OrderStatuses.all
+       end
+     end
+   end
+   ```
+
+3. **Models include the concern**, not the module directly
+4. **Write tests for modules** in `spec/modules/`
+
+See `app/modules/notification_distribution_methods.rb` and `app/models/concerns/has_distribution_method.rb` for reference.
+
 ### Notification System
 
 A custom Topic/Subscriber notification system (see `docs/notification_system.md` for full documentation):
