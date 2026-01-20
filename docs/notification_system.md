@@ -45,6 +45,8 @@ Defines how a notification is rendered for a specific delivery channel.
 | body_template | text | ERB template for message body |
 | active | boolean | Whether template is active |
 
+**Display Name**: "Topic Name (Method)" - e.g., "User Password Changed (Email)"
+
 **ERB Template Variables**: Templates have access to any variables passed in the `context` hash when triggering the notification.
 
 Example template:
@@ -65,6 +67,8 @@ Links a user to a topic with their delivery preferences.
 | summarized_daily_hour | integer | Hour (0-23) for daily summaries |
 | active | boolean | Whether subscription is active |
 
+**Display Name**: "Topic Name - User Name" - e.g., "User Password Changed - John Smith"
+
 #### NotificationMessage
 Stores a rendered notification message.
 
@@ -74,6 +78,8 @@ Stores a rendered notification message.
 | subject | string | Rendered subject |
 | body | text | Rendered body |
 | metadata | jsonb | Original context data |
+
+**Display Name**: Truncated subject (50 chars) - e.g., "Password Changed for John Smith"
 
 #### NotificationQueueItem
 Tracks delivery status for each subscription.
@@ -86,6 +92,8 @@ Tracks delivery status for each subscription.
 | distribution_method | string | Delivery channel |
 | distribute_at | datetime | When to send |
 | distributed_at | datetime | When actually sent (null = pending) |
+
+**Display Name**: "User Name - Subject" (truncated to 30 chars) - e.g., "John Smith - Password Changed for..."
 
 ---
 

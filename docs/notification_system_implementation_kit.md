@@ -421,6 +421,11 @@ class NotificationTemplate < ApplicationRecord
   def self.default_sort
     [ distribution_method: :asc, created_at: :desc ]
   end
+
+  # Display name for admin show page headers
+  def name
+    "#{notification_topic.name} (#{distribution_method.titleize})"
+  end
 end
 ```
 
@@ -477,6 +482,11 @@ class NotificationSubscription < ApplicationRecord
   def self.default_sort
     [ created_at: :desc ]
   end
+
+  # Display name for admin show page headers
+  def name
+    "#{notification_topic.name} - #{user.full_name}"
+  end
 end
 ```
 
@@ -514,6 +524,11 @@ class NotificationMessage < ApplicationRecord
 
   def self.default_sort
     [ created_at: :desc ]
+  end
+
+  # Display name for admin show page headers
+  def name
+    subject.truncate(50)
   end
 end
 ```
@@ -573,6 +588,11 @@ class NotificationQueueItem < ApplicationRecord
 
   def mark_distributed!
     update!(distributed_at: Time.current)
+  end
+
+  # Display name for admin show page headers
+  def name
+    "#{user.full_name} - #{notification_message.subject.truncate(30)}"
   end
 end
 ```
