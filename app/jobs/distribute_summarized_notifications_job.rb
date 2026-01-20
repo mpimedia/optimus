@@ -5,26 +5,29 @@ class DistributeSummarizedNotificationsJob < ApplicationJob
     user = User.find_by(id: user_id)
     return unless user
 
-    items = NotificationQueueItem
-      .where(id: notification_queue_item_ids)
-      .pending
-      .includes(:notification_message)
+    NotificationQueueItem.transaction do
+      items = NotificationQueueItem
+        .lock("FOR UPDATE")
+        .where(id: notification_queue_item_ids)
+        .where(distributed_at: nil)
+        .includes(:notification_message)
 
-    return if items.empty?
+      return if items.empty?
 
-    messages = items.map(&:notification_message).uniq
+      messages = items.map(&:notification_message).uniq
 
-    case distribution_method
-    when NotificationDistributionMethods::EMAIL
-      deliver_email_summary(user, messages)
-    when NotificationDistributionMethods::SMS
-      deliver_sms_summary(user, messages)
-    when NotificationDistributionMethods::CHAT
-      deliver_chat_summary(user, messages)
+      case distribution_method
+      when NotificationDistributionMethods::EMAIL
+        deliver_email_summary(user, messages)
+      when NotificationDistributionMethods::SMS
+        deliver_sms_summary(user, messages)
+      when NotificationDistributionMethods::CHAT
+        deliver_chat_summary(user, messages)
+      end
+
+      # Mark all items as distributed
+      items.each(&:mark_distributed!)
     end
-
-    # Mark all items as distributed
-    items.each(&:mark_distributed!)
   end
 
   private

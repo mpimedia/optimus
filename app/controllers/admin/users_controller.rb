@@ -22,10 +22,16 @@ class Admin::UsersController < AdminController
     params[:user][:confirmed_at] = DateTime.current
     instance = controller_class.create(create_params)
 
-    instance.log(user: current_user, operation: action_name, meta: params.to_json)
-    instance.notify_topic("user.created", context: { user: instance, created_by: current_user })
-    flash[:success] = "New #{instance.class_name_title} successfully created"
-    redirect_to polymorphic_path([ :admin, instance ])
+    if instance.persisted?
+      instance.log(user: current_user, operation: action_name, meta: params.to_json)
+      instance.notify_topic("user.created", context: { user: instance, created_by: current_user })
+      flash[:success] = "New #{instance.class_name_title} successfully created"
+      redirect_to polymorphic_path([ :admin, instance ])
+    else
+      @instance = instance
+      flash.now[:error] = instance.errors.full_messages.to_sentence
+      render :new, status: :unprocessable_entity
+    end
   end
 
   def edit

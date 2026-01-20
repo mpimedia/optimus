@@ -22,7 +22,9 @@ module Notifiable
     def deserialize_context(serialized_context)
       serialized_context.transform_values do |value|
         if value.is_a?(Hash) && value["_class"].present? && value["_id"].present?
-          value["_class"].constantize.find_by(id: value["_id"])
+          klass = value["_class"].safe_constantize
+          next value unless klass && klass < ApplicationRecord
+          klass.find_by(id: value["_id"])
         else
           value
         end

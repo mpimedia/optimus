@@ -4,18 +4,21 @@ class DistributeNotificationJob < ApplicationJob
   def perform(notification_queue_item_id:)
     item = NotificationQueueItem.find_by(id: notification_queue_item_id)
     return unless item
-    return if item.distributed?
 
-    case item.distribution_method
-    when NotificationDistributionMethods::EMAIL
-      deliver_email(item)
-    when NotificationDistributionMethods::SMS
-      deliver_sms(item)
-    when NotificationDistributionMethods::CHAT
-      deliver_chat(item)
+    item.with_lock do
+      return if item.distributed?
+
+      case item.distribution_method
+      when NotificationDistributionMethods::EMAIL
+        deliver_email(item)
+      when NotificationDistributionMethods::SMS
+        deliver_sms(item)
+      when NotificationDistributionMethods::CHAT
+        deliver_chat(item)
+      end
+
+      item.mark_distributed!
     end
-
-    item.mark_distributed!
   end
 
   private
