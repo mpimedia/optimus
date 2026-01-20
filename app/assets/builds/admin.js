@@ -611,7 +611,6 @@
     StreamElement: () => StreamElement,
     StreamSourceElement: () => StreamSourceElement,
     cache: () => cache,
-    clearCache: () => clearCache,
     config: () => config,
     connectStreamSource: () => connectStreamSource,
     disconnectStreamSource: () => disconnectStreamSource,
@@ -623,7 +622,7 @@
     morphChildren: () => morphChildren,
     morphElements: () => morphElements,
     morphTurboFrameElements: () => morphTurboFrameElements,
-    navigator: () => navigator$1,
+    navigator: () => navigator2,
     registerAdapter: () => registerAdapter,
     renderStreamMessage: () => renderStreamMessage,
     session: () => session,
@@ -633,62 +632,6 @@
     start: () => start,
     visit: () => visit
   });
-  (function(prototype) {
-    if (typeof prototype.requestSubmit == "function") return;
-    prototype.requestSubmit = function(submitter2) {
-      if (submitter2) {
-        validateSubmitter(submitter2, this);
-        submitter2.click();
-      } else {
-        submitter2 = document.createElement("input");
-        submitter2.type = "submit";
-        submitter2.hidden = true;
-        this.appendChild(submitter2);
-        submitter2.click();
-        this.removeChild(submitter2);
-      }
-    };
-    function validateSubmitter(submitter2, form) {
-      submitter2 instanceof HTMLElement || raise(TypeError, "parameter 1 is not of type 'HTMLElement'");
-      submitter2.type == "submit" || raise(TypeError, "The specified element is not a submit button");
-      submitter2.form == form || raise(DOMException, "The specified element is not owned by this form element", "NotFoundError");
-    }
-    function raise(errorConstructor, message, name) {
-      throw new errorConstructor("Failed to execute 'requestSubmit' on 'HTMLFormElement': " + message + ".", name);
-    }
-  })(HTMLFormElement.prototype);
-  var submittersByForm = /* @__PURE__ */ new WeakMap();
-  function findSubmitterFromClickTarget(target) {
-    const element = target instanceof Element ? target : target instanceof Node ? target.parentElement : null;
-    const candidate = element ? element.closest("input, button") : null;
-    return candidate?.type == "submit" ? candidate : null;
-  }
-  function clickCaptured(event) {
-    const submitter2 = findSubmitterFromClickTarget(event.target);
-    if (submitter2 && submitter2.form) {
-      submittersByForm.set(submitter2.form, submitter2);
-    }
-  }
-  (function() {
-    if ("submitter" in Event.prototype) return;
-    let prototype = window.Event.prototype;
-    if ("SubmitEvent" in window) {
-      const prototypeOfSubmitEvent = window.SubmitEvent.prototype;
-      if (/Apple Computer/.test(navigator.vendor) && !("submitter" in prototypeOfSubmitEvent)) {
-        prototype = prototypeOfSubmitEvent;
-      } else {
-        return;
-      }
-    }
-    addEventListener("click", clickCaptured, true);
-    Object.defineProperty(prototype, "submitter", {
-      get() {
-        if (this.type == "submit" && this.target instanceof HTMLFormElement) {
-          return submittersByForm.get(this.target);
-        }
-      }
-    });
-  })();
   var FrameLoadingStyle = {
     eager: "eager",
     lazy: "lazy"
@@ -961,9 +904,6 @@
   function nextEventLoopTick() {
     return new Promise((resolve) => setTimeout(() => resolve(), 0));
   }
-  function nextMicrotask() {
-    return Promise.resolve();
-  }
   function parseHTMLDocument(html = "") {
     return new DOMParser().parseFromString(html, "text/html");
   }
@@ -988,7 +928,7 @@
       } else if (i == 19) {
         return (Math.floor(Math.random() * 4) + 8).toString(16);
       } else {
-        return Math.floor(Math.random() * 15).toString(16);
+        return Math.floor(Math.random() * 16).toString(16);
       }
     }).join("");
   }
@@ -1103,12 +1043,11 @@
   function findLinkFromClickTarget(target) {
     const link = findClosestRecursively(target, "a[href], a[xlink\\:href]");
     if (!link) return null;
+    if (link.href.startsWith("#")) return null;
     if (link.hasAttribute("download")) return null;
-    if (link.hasAttribute("target") && link.target !== "_self") return null;
+    const linkTarget = link.getAttribute("target");
+    if (linkTarget && linkTarget !== "_self") return null;
     return link;
-  }
-  function getLocationForLink(link) {
-    return expandURL(link.getAttribute("href") || "");
   }
   function debounce(fn2, delay) {
     let timeoutId = null;
@@ -1178,6 +1117,9 @@
   }
   function locationIsVisitable(location2, rootLocation) {
     return isPrefixedBy(location2, rootLocation) && !config.drive.unvisitableExtensions.has(getExtension(location2));
+  }
+  function getLocationForLink(link) {
+    return expandURL(link.getAttribute("href") || "");
   }
   function getRequestURL(url) {
     const anchor = getAnchor(url);
@@ -1517,29 +1459,92 @@
     }
     return fragment;
   }
-  var PREFETCH_DELAY = 100;
-  var PrefetchCache = class {
-    #prefetchTimeout = null;
-    #prefetched = null;
-    get(url) {
-      if (this.#prefetched && this.#prefetched.url === url && this.#prefetched.expire > Date.now()) {
-        return this.#prefetched.request;
+  var identity = (key) => key;
+  var LRUCache = class {
+    keys = [];
+    entries = {};
+    #toCacheKey;
+    constructor(size, toCacheKey2 = identity) {
+      this.size = size;
+      this.#toCacheKey = toCacheKey2;
+    }
+    has(key) {
+      return this.#toCacheKey(key) in this.entries;
+    }
+    get(key) {
+      if (this.has(key)) {
+        const entry = this.read(key);
+        this.touch(key);
+        return entry;
       }
     }
-    setLater(url, request, ttl) {
-      this.clear();
-      this.#prefetchTimeout = setTimeout(() => {
-        request.perform();
-        this.set(url, request, ttl);
-        this.#prefetchTimeout = null;
-      }, PREFETCH_DELAY);
-    }
-    set(url, request, ttl) {
-      this.#prefetched = { url, request, expire: new Date((/* @__PURE__ */ new Date()).getTime() + ttl) };
+    put(key, entry) {
+      this.write(key, entry);
+      this.touch(key);
+      return entry;
     }
     clear() {
+      for (const key of Object.keys(this.entries)) {
+        this.evict(key);
+      }
+    }
+    // Private
+    read(key) {
+      return this.entries[this.#toCacheKey(key)];
+    }
+    write(key, entry) {
+      this.entries[this.#toCacheKey(key)] = entry;
+    }
+    touch(key) {
+      key = this.#toCacheKey(key);
+      const index = this.keys.indexOf(key);
+      if (index > -1) this.keys.splice(index, 1);
+      this.keys.unshift(key);
+      this.trim();
+    }
+    trim() {
+      for (const key of this.keys.splice(this.size)) {
+        this.evict(key);
+      }
+    }
+    evict(key) {
+      delete this.entries[key];
+    }
+  };
+  var PREFETCH_DELAY = 100;
+  var PrefetchCache = class extends LRUCache {
+    #prefetchTimeout = null;
+    #maxAges = {};
+    constructor(size = 1, prefetchDelay = PREFETCH_DELAY) {
+      super(size, toCacheKey);
+      this.prefetchDelay = prefetchDelay;
+    }
+    putLater(url, request, ttl) {
+      this.#prefetchTimeout = setTimeout(() => {
+        request.perform();
+        this.put(url, request, ttl);
+        this.#prefetchTimeout = null;
+      }, this.prefetchDelay);
+    }
+    put(url, request, ttl = cacheTtl) {
+      super.put(url, request);
+      this.#maxAges[toCacheKey(url)] = new Date((/* @__PURE__ */ new Date()).getTime() + ttl);
+    }
+    clear() {
+      super.clear();
       if (this.#prefetchTimeout) clearTimeout(this.#prefetchTimeout);
-      this.#prefetched = null;
+    }
+    evict(key) {
+      super.evict(key);
+      delete this.#maxAges[key];
+    }
+    has(key) {
+      if (super.has(key)) {
+        const maxAge = this.#maxAges[toCacheKey(key)];
+        return maxAge && maxAge > Date.now();
+      } else {
+        return false;
+      }
     }
   };
   var cacheTtl = 10 * 1e3;
@@ -3318,10 +3323,16 @@
       for (const clonedPasswordInput of clonedElement.querySelectorAll('input[type="password"]')) {
         clonedPasswordInput.value = "";
       }
+      for (const clonedNoscriptElement of clonedElement.querySelectorAll("noscript")) {
+        clonedNoscriptElement.remove();
+      }
       return new _PageSnapshot(this.documentElement, clonedElement, this.headSnapshot);
     }
     get lang() {
       return this.documentElement.getAttribute("lang");
+    }
+    get dir() {
+      return this.documentElement.getAttribute("dir");
     }
     get headElement() {
       return this.headSnapshot.element;
@@ -3346,11 +3357,11 @@
       const viewTransitionEnabled = this.getSetting("view-transition") === "true" || this.headSnapshot.getMetaValue("view-transition") === "same-origin";
       return viewTransitionEnabled && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     }
-    get shouldMorphPage() {
-      return this.getSetting("refresh-method") === "morph";
+    get refreshMethod() {
+      return this.getSetting("refresh-method");
     }
-    get shouldPreserveScrollPosition() {
-      return this.getSetting("refresh-scroll") === "preserve";
+    get refreshScroll() {
+      return this.getSetting("refresh-scroll");
     }
     // Private
     getSetting(name) {
@@ -3383,7 +3394,8 @@
     willRender: true,
     updateHistory: true,
     shouldCacheSnapshot: true,
-    acceptsStreamResponse: false
+    acceptsStreamResponse: false,
+    refresh: {}
   };
   var TimingMetric = {
     visitStart: "visitStart",
@@ -3436,7 +3448,8 @@
         updateHistory,
         shouldCacheSnapshot,
         acceptsStreamResponse,
-        direction
+        direction,
+        refresh
       } = {
         ...defaultOptions,
         ...options
@@ -3447,7 +3460,6 @@
       this.snapshot = snapshot;
       this.snapshotHTML = snapshotHTML;
       this.response = response;
-      this.isSamePage = this.delegate.locationWithActionIsSamePage(this.location, this.action);
       this.isPageRefresh = this.view.isPageRefresh(this);
       this.visitCachedSnapshot = visitCachedSnapshot;
       this.willRender = willRender;
@@ -3456,6 +3468,7 @@
       this.shouldCacheSnapshot = shouldCacheSnapshot;
       this.acceptsStreamResponse = acceptsStreamResponse;
       this.direction = direction || Direction[action];
+      this.refresh = refresh;
     }
     get adapter() {
       return this.delegate.adapter;
@@ -3468,9 +3481,6 @@
     }
     get restorationData() {
       return this.history.getRestorationDataForIdentifier(this.restorationIdentifier);
-    }
-    get silent() {
-      return this.isSamePage;
     }
     start() {
       if (this.state == VisitState.initialized) {
@@ -3590,7 +3600,7 @@
         const isPreview = this.shouldIssueRequest();
         this.render(async () => {
           this.cacheSnapshot();
-          if (this.isSamePage || this.isPageRefresh) {
+          if (this.isPageRefresh) {
             this.adapter.visitRendered(this);
           } else {
             if (this.view.renderPromise) await this.view.renderPromise;
@@ -3612,16 +3622,6 @@
           willRender: false
         });
         this.followedRedirect = true;
-      }
-    }
-    goToSamePageAnchor() {
-      if (this.isSamePage) {
-        this.render(async () => {
-          this.cacheSnapshot();
-          this.performScroll();
-          this.changeHistory();
-          this.adapter.visitRendered(this);
-        });
       }
     }
     // Fetch request delegate
@@ -3677,9 +3677,6 @@
         } else {
           this.scrollToAnchor() || this.view.scrollToTop();
         }
-        if (this.isSamePage) {
-          this.delegate.visitScrolledToSamePageLocation(this.view.lastRenderedLocation, this.location);
-        }
         this.scrolled = true;
       }
     }
@@ -3709,9 +3706,7 @@
       return typeof this.response == "object";
     }
     shouldIssueRequest() {
-      if (this.isSamePage) {
-        return false;
-      } else if (this.action == "restore") {
+      if (this.action == "restore") {
         return !this.hasCachedSnapshot();
       } else {
         return this.willRender;
@@ -3764,7 +3759,6 @@
       this.redirectedToLocation = null;
       visit2.loadCachedSnapshot();
       visit2.issueRequest();
-      visit2.goToSamePageAnchor();
     }
     visitRequestStarted(visit2) {
       this.progressBar.setValue(0);
@@ -3859,7 +3853,6 @@
   };
   var CacheObserver = class {
     selector = "[data-turbo-temporary]";
-    deprecatedSelector = "[data-turbo-cache=false]";
     started = false;
     start() {
       if (!this.started) {
@@ -3879,16 +3872,7 @@
       }
     };
     get temporaryElements() {
-      return [...document.querySelectorAll(this.selector), ...this.temporaryElementsWithDeprecation];
-    }
-    get temporaryElementsWithDeprecation() {
-      const elements = document.querySelectorAll(this.deprecatedSelector);
-      if (elements.length) {
-        console.warn(
-          `The ${this.deprecatedSelector} selector is deprecated and will be removed in a future version. Use ${this.selector} instead.`
-        );
-      }
-      return [...elements];
+      return [...document.querySelectorAll(this.selector)];
     }
   };
   var FrameRedirector = class {
@@ -3956,7 +3940,6 @@
     restorationIdentifier = uuid();
     restorationData = {};
     started = false;
-    pageLoaded = false;
     currentIndex = 0;
     constructor(delegate) {
       this.delegate = delegate;
@@ -3964,7 +3947,6 @@
     start() {
       if (!this.started) {
         addEventListener("popstate", this.onPopState, false);
-        addEventListener("load", this.onPageLoad, false);
         this.currentIndex = history.state?.turbo?.restorationIndex || 0;
         this.started = true;
         this.replace(new URL(window.location.href));
@@ -3973,7 +3955,6 @@
     stop() {
       if (this.started) {
         removeEventListener("popstate", this.onPopState, false);
-        removeEventListener("load", this.onPageLoad, false);
         this.started = false;
       }
     }
@@ -4017,29 +3998,19 @@
     }
     // Event handlers
     onPopState = (event) => {
-      if (this.shouldHandlePopState()) {
-        const { turbo } = event.state || {};
-        if (turbo) {
-          this.location = new URL(window.location.href);
-          const { restorationIdentifier, restorationIndex } = turbo;
-          this.restorationIdentifier = restorationIdentifier;
-          const direction = restorationIndex > this.currentIndex ? "forward" : "back";
-          this.delegate.historyPoppedToLocationWithRestorationIdentifierAndDirection(this.location, restorationIdentifier, direction);
-          this.currentIndex = restorationIndex;
-        }
+      const { turbo } = event.state || {};
+      this.location = new URL(window.location.href);
+      if (turbo) {
+        const { restorationIdentifier, restorationIndex } = turbo;
+        this.restorationIdentifier = restorationIdentifier;
+        const direction = restorationIndex > this.currentIndex ? "forward" : "back";
+        this.delegate.historyPoppedToLocationWithRestorationIdentifierAndDirection(this.location, restorationIdentifier, direction);
+        this.currentIndex = restorationIndex;
+      } else {
+        this.currentIndex++;
+        this.delegate.historyPoppedWithEmptyState(this.location);
       }
     };
-    onPageLoad = async (_event) => {
-      await nextMicrotask();
-      this.pageLoaded = true;
-    };
-    // Private
-    shouldHandlePopState() {
-      return this.pageIsLoaded();
-    }
-    pageIsLoaded() {
-      return this.pageLoaded || document.readyState == "complete";
-    }
   };
   var LinkPrefetchObserver = class {
     started = false;
@@ -4098,7 +4069,7 @@
             target
           );
           fetchRequest.fetchOptions.priority = "low";
-          prefetchCache.setLater(location2.toString(), fetchRequest, this.#cacheTtl);
+          prefetchCache.putLater(location2, fetchRequest, this.#cacheTtl);
         }
       }
     };
@@ -4111,7 +4082,7 @@
     };
     #tryToUsePrefetchedRequest = (event) => {
       if (event.target.tagName !== "FORM" && event.detail.fetchOptions.method === "GET") {
-        const cached = prefetchCache.get(event.detail.url.toString());
+        const cached = prefetchCache.get(event.detail.url);
         if (cached) {
           event.detail.fetchRequest = cached;
         }
@@ -4260,7 +4231,7 @@
         } else {
           await this.view.renderPage(snapshot, false, true, this.currentVisit);
         }
-        if (!snapshot.shouldPreserveScrollPosition) {
+        if (snapshot.refreshScroll !== "preserve") {
           this.view.scrollToTop();
         }
         this.view.clearSnapshotCache();
@@ -4289,14 +4260,10 @@
       this.delegate.visitCompleted(visit2);
       delete this.currentVisit;
     }
+    // Same-page links are no longer handled with a Visit.
+    // This method is still needed for Turbo Native adapters.
     locationWithActionIsSamePage(location2, action) {
-      const anchor = getAnchor(location2);
-      const currentAnchor = getAnchor(this.view.lastRenderedLocation);
-      const isRestorationToTop = action === "restore" && typeof anchor === "undefined";
-      return action !== "replace" && getRequestURL(location2) === getRequestURL(this.view.lastRenderedLocation) && (isRestorationToTop || anchor != null && anchor !== currentAnchor);
-    }
-    visitScrolledToSamePageLocation(oldURL, newURL) {
-      this.delegate.visitScrolledToSamePageLocation(oldURL, newURL);
+      return false;
     }
     // Visits
     get location() {
@@ -4615,11 +4582,16 @@
     }
     #setLanguage() {
       const { documentElement } = this.currentSnapshot;
-      const { lang } = this.newSnapshot;
+      const { dir, lang } = this.newSnapshot;
       if (lang) {
         documentElement.setAttribute("lang", lang);
       } else {
         documentElement.removeAttribute("lang");
+      }
+      if (dir) {
+        documentElement.setAttribute("dir", dir);
+      } else {
+        documentElement.removeAttribute("dir");
       }
     }
     async mergeHead() {
@@ -4700,7 +4672,13 @@
     }
     activateNewBody() {
       document.adoptNode(this.newElement);
+      this.removeNoscriptElements();
       this.activateNewBodyScriptElements();
+    }
+    removeNoscriptElements() {
+      for (const noscriptElement of this.newElement.querySelectorAll("noscript")) {
+        noscriptElement.remove();
+      }
     }
     activateNewBodyScriptElements() {
       for (const inertScriptElement of this.newBodyScriptElements) {
@@ -4760,48 +4738,12 @@
       return false;
     }
   };
-  var SnapshotCache = class {
-    keys = [];
-    snapshots = {};
+  var SnapshotCache = class extends LRUCache {
     constructor(size) {
-      this.size = size;
+      super(size, toCacheKey);
     }
-    has(location2) {
-      return toCacheKey(location2) in this.snapshots;
-    }
-    get(location2) {
-      if (this.has(location2)) {
-        const snapshot = this.read(location2);
-        this.touch(location2);
-        return snapshot;
-      }
-    }
-    put(location2, snapshot) {
-      this.write(location2, snapshot);
-      this.touch(location2);
-      return snapshot;
-    }
-    clear() {
-      this.snapshots = {};
-    }
-    // Private
-    read(location2) {
-      return this.snapshots[toCacheKey(location2)];
-    }
-    write(location2, snapshot) {
-      this.snapshots[toCacheKey(location2)] = snapshot;
-    }
-    touch(location2) {
-      const key = toCacheKey(location2);
-      const index = this.keys.indexOf(key);
-      if (index > -1) this.keys.splice(index, 1);
-      this.keys.unshift(key);
-      this.trim();
-    }
-    trim() {
-      for (const key of this.keys.splice(this.size)) {
-        delete this.snapshots[key];
-      }
+    get snapshots() {
+      return this.entries;
     }
   };
   var PageView = class extends View {
@@ -4812,7 +4754,7 @@
       return this.snapshot.prefersViewTransitions && newSnapshot.prefersViewTransitions;
     }
     renderPage(snapshot, isPreview = false, willRender = true, visit2) {
-      const shouldMorphPage = this.isPageRefresh(visit2) && this.snapshot.shouldMorphPage;
+      const shouldMorphPage = this.isPageRefresh(visit2) && (visit2?.refresh?.method || this.snapshot.refreshMethod) === "morph";
       const rendererClass = shouldMorphPage ? MorphingPageRenderer : PageRenderer;
       const renderer = new rendererClass(this.snapshot, snapshot, isPreview, willRender);
       if (!renderer.shouldRender) {
@@ -4847,7 +4789,7 @@
       return !visit2 || this.lastRenderedLocation.pathname === visit2.location.pathname && visit2.action === "replace";
     }
     shouldPreserveScrollPosition(visit2) {
-      return this.isPageRefresh(visit2) && this.snapshot.shouldPreserveScrollPosition;
+      return this.isPageRefresh(visit2) && (visit2?.refresh?.scroll || this.snapshot.refreshScroll) === "preserve";
     }
     get snapshot() {
       return PageSnapshot.fromElement(this.element);
@@ -5004,11 +4946,13 @@
         this.navigator.proposeVisit(expandURL(location2), options);
       }
     }
-    refresh(url, requestId) {
+    refresh(url, options = {}) {
+      options = typeof options === "string" ? { requestId: options } : options;
+      const { method, requestId, scroll } = options;
       const isRecentRequest = requestId && this.recentRequests.has(requestId);
       const isCurrentUrl = url === document.baseURI;
       if (!isRecentRequest && !this.navigator.currentVisit && isCurrentUrl) {
-        this.visit(url, { action: "replace", shouldCacheSnapshot: false });
+        this.visit(url, { action: "replace", shouldCacheSnapshot: false, refresh: { method, scroll } });
       }
     }
     connectStreamSource(source) {
@@ -5087,6 +5031,11 @@
         });
       }
     }
+    historyPoppedWithEmptyState(location2) {
+      this.history.replace(location2);
+      this.view.lastRenderedLocation = location2;
+      this.view.cacheSnapshot();
+    }
     // Scroll observer delegate
     scrollPositionChanged(position) {
       this.history.updateRestorationData({ scrollPosition: position });
@@ -5112,7 +5061,7 @@
     }
     // Navigator delegate
     allowsVisitingLocationWithAction(location2, action) {
-      return this.locationWithActionIsSamePage(location2, action) || this.applicationAllowsVisitingLocation(location2);
+      return this.applicationAllowsVisitingLocation(location2);
     }
     visitProposedToLocation(location2, options) {
       extendURLWithDeprecatedProperties(location2);
@@ -5125,20 +5074,12 @@
         this.view.markVisitDirection(visit2.direction);
       }
       extendURLWithDeprecatedProperties(visit2.location);
-      if (!visit2.silent) {
-        this.notifyApplicationAfterVisitingLocation(visit2.location, visit2.action);
-      }
+      this.notifyApplicationAfterVisitingLocation(visit2.location, visit2.action);
     }
     visitCompleted(visit2) {
       this.view.unmarkVisitDirection();
       clearBusyState(document.documentElement);
       this.notifyApplicationAfterPageLoad(visit2.getTimingMetrics());
-    }
-    locationWithActionIsSamePage(location2, action) {
-      return this.navigator.locationWithActionIsSamePage(location2, action);
-    }
-    visitScrolledToSamePageLocation(oldURL, newURL) {
-      this.notifyApplicationAfterVisitingSamePageLocation(oldURL, newURL);
     }
     // Form submit observer delegate
     willSubmitForm(form, submitter2) {
@@ -5165,9 +5106,7 @@
     }
     // Page view delegate
     viewWillCacheSnapshot() {
-      if (!this.navigator.currentVisit?.silent) {
-        this.notifyApplicationBeforeCachingSnapshot();
-      }
+      this.notifyApplicationBeforeCachingSnapshot();
     }
     allowsImmediateRender({ element }, options) {
       const event = this.notifyApplicationBeforeRender(element, options);
@@ -5239,14 +5178,6 @@
         detail: { url: this.location.href, timing }
       });
     }
-    notifyApplicationAfterVisitingSamePageLocation(oldURL, newURL) {
-      dispatchEvent(
-        new HashChangeEvent("hashchange", {
-          oldURL: oldURL.toString(),
-          newURL: newURL.toString()
-        })
-      );
-    }
     notifyApplicationAfterFrameLoad(frame) {
       return dispatch("turbo:frame-load", { target: frame });
     }
@@ -5306,7 +5237,7 @@
     }
   };
   var session = new Session(recentRequests);
-  var { cache, navigator: navigator$1 } = session;
+  var { cache, navigator: navigator2 } = session;
   function start() {
     session.start();
   }
@@ -5324,12 +5255,6 @@
   }
   function renderStreamMessage(message) {
     session.renderStreamMessage(message);
-  }
-  function clearCache() {
-    console.warn(
-      "Please replace `Turbo.clearCache()` with `Turbo.cache.clear()`. The top-level function is deprecated and will be removed in a future version of Turbo.`"
-    );
-    session.clearCache();
   }
   function setProgressBarDelay(delay) {
     console.warn(
@@ -5357,7 +5282,7 @@
   }
   var Turbo = /* @__PURE__ */ Object.freeze({
     __proto__: null,
-    navigator: navigator$1,
+    navigator: navigator2,
     session,
     cache,
     PageRenderer,
@@ -5371,7 +5296,6 @@
     connectStreamSource,
     disconnectStreamSource,
     renderStreamMessage,
-    clearCache,
     setProgressBarDelay,
     setConfirmMethod,
     setFormMode,
@@ -5422,15 +5346,23 @@
         this.formLinkClickObserver.stop();
         this.linkInterceptor.stop();
         this.formSubmitObserver.stop();
+        if (!this.element.hasAttribute("recurse")) {
+          this.#currentFetchRequest?.cancel();
+        }
       }
     }
     disabledChanged() {
-      if (this.loadingStyle == FrameLoadingStyle.eager) {
+      if (this.disabled) {
+        this.#currentFetchRequest?.cancel();
+      } else if (this.loadingStyle == FrameLoadingStyle.eager) {
         this.#loadSourceURL();
       }
     }
     sourceURLChanged() {
       if (this.#isIgnoringChangesTo("src")) return;
+      if (!this.sourceURL) {
+        this.#currentFetchRequest?.cancel();
+      }
       if (this.element.isConnected) {
         this.complete = false;
       }
@@ -5512,12 +5444,13 @@
       }
       this.formSubmission = new FormSubmission(this, element, submitter2);
       const { fetchRequest } = this.formSubmission;
-      this.prepareRequest(fetchRequest);
+      const frame = this.#findFrameElement(element, submitter2);
+      this.prepareRequest(fetchRequest, frame);
       this.formSubmission.start();
     }
     // Fetch request delegate
-    prepareRequest(request) {
-      request.headers["Turbo-Frame"] = this.id;
+    prepareRequest(request, frame = this) {
+      request.headers["Turbo-Frame"] = frame.id;
       if (this.currentNavigationElement?.hasAttribute("data-turbo-stream")) {
         request.acceptResponseType(StreamMessage.contentType);
       }
@@ -5707,7 +5640,8 @@
     }
     #findFrameElement(element, submitter2) {
       const id = getAttribute("data-turbo-frame", submitter2, element) || this.element.getAttribute("target");
-      return getFrameElementById(id) ?? this.element;
+      const target = this.#getFrameElementById(id);
+      return target instanceof FrameElement ? target : this.element;
     }
     async extractForeignFrameElement(container) {
       let element;
@@ -5741,9 +5675,11 @@
         return false;
       }
       if (id) {
-        const frameElement = getFrameElementById(id);
+        const frameElement = this.#getFrameElementById(id);
         if (frameElement) {
           return !frameElement.disabled;
+        } else if (id == "_parent") {
+          return false;
         }
       }
       if (!session.elementIsNavigatable(element)) {
@@ -5758,8 +5694,11 @@
     get id() {
       return this.element.id;
     }
+    get disabled() {
+      return this.element.disabled;
+    }
     get enabled() {
-      return !this.element.disabled;
+      return !this.disabled;
     }
     get sourceURL() {
       if (this.element.src) {
@@ -5808,15 +5747,15 @@
       callback();
       delete this.currentNavigationElement;
     }
-  };
-  function getFrameElementById(id) {
-    if (id != null) {
-      const element = document.getElementById(id);
-      if (element instanceof FrameElement) {
-        return element;
+    #getFrameElementById(id) {
+      if (id != null) {
+        const element = id === "_parent" ? this.element.parentElement.closest("turbo-frame") : document.getElementById(id);
+        if (element instanceof FrameElement) {
+          return element;
+        }
       }
     }
-  }
+  };
   function activateElement(element, currentURL) {
     if (element) {
       const src = element.getAttribute("src");
@@ -5835,6 +5774,7 @@
   }
   var StreamActions = {
     after() {
+      this.removeDuplicateTargetSiblings();
       this.targetElements.forEach((e) => e.parentElement?.insertBefore(this.templateContent, e.nextSibling));
     },
     append() {
@@ -5842,6 +5782,7 @@
       this.targetElements.forEach((e) => e.append(this.templateContent));
     },
     before() {
+      this.removeDuplicateTargetSiblings();
       this.targetElements.forEach((e) => e.parentElement?.insertBefore(this.templateContent, e));
     },
     prepend() {
@@ -5873,7 +5814,10 @@
       });
     },
     refresh() {
-      session.refresh(this.baseURI, this.requestId);
+      const method = this.getAttribute("method");
+      const requestId = this.requestId;
+      const scroll = this.getAttribute("scroll");
+      session.refresh(this.baseURI, { method, requestId, scroll });
     }
   };
   var StreamElement = class _StreamElement extends HTMLElement {
@@ -5917,6 +5861,20 @@
       const existingChildren = this.targetElements.flatMap((e) => [...e.children]).filter((c) => !!c.getAttribute("id"));
       const newChildrenIds = [...this.templateContent?.children || []].filter((c) => !!c.getAttribute("id")).map((c) => c.getAttribute("id"));
       return existingChildren.filter((c) => newChildrenIds.includes(c.getAttribute("id")));
+    }
+    /**
+    * Removes duplicate siblings (by ID)
+    */
+    removeDuplicateTargetSiblings() {
+      this.duplicateSiblings.forEach((c) => c.remove());
+    }
+    /**
+    * Gets the list of duplicate siblings (i.e. those with the same ID)
+    */
+    get duplicateSiblings() {
+      const existingChildren = this.targetElements.flatMap((e) => [...e.parentElement.children]).filter((c) => !!c.id);
+      const newChildrenIds = [...this.templateContent?.children || []].filter((c) => !!c.id).map((c) => c.id);
+      return existingChildren.filter((c) => newChildrenIds.includes(c.id));
     }
     /**
      * Gets the action function to be performed.
@@ -6044,10 +6002,10 @@
     customElements.define("turbo-stream-source", StreamSourceElement);
   }
   (() => {
-    let element = document.currentScript;
-    if (!element) return;
-    if (element.hasAttribute("data-turbo-suppress-warning")) return;
-    element = element.parentElement;
+    const scriptElement = document.currentScript;
+    if (!scriptElement) return;
+    if (scriptElement.hasAttribute("data-turbo-suppress-warning")) return;
+    let element = scriptElement.parentElement;
     while (element) {
       if (element == document.body) {
         return console.warn(
@@ -6061,7 +6019,7 @@
         ——
         Suppress this warning by adding a "data-turbo-suppress-warning" attribute to: %s
       `,
-          element.outerHTML
+          scriptElement.outerHTML
         );
       }
       element = element.parentElement;
@@ -10330,7 +10288,7 @@
     });
   };
   var execute = (possibleCallback, args = [], defaultValue = possibleCallback) => {
-    return typeof possibleCallback === "function" ? possibleCallback.call(...args) : defaultValue;
+    return typeof possibleCallback === "function" ? possibleCallback(...args) : defaultValue;
   };
   var executeAfterTransition = (callback, transitionElement, waitForTransition = true) => {
     if (!waitForTransition) {
@@ -10607,7 +10565,7 @@
       const bsKeys = Object.keys(element.dataset).filter((key) => key.startsWith("bs") && !key.startsWith("bsConfig"));
       for (const key of bsKeys) {
         let pureKey = key.replace(/^bs/, "");
-        pureKey = pureKey.charAt(0).toLowerCase() + pureKey.slice(1);
+        pureKey = pureKey.charAt(0).toLowerCase() + pureKey.slice(1, pureKey.length);
         attributes[pureKey] = normalizeData(element.dataset[key]);
       }
       return attributes;
@@ -10655,7 +10613,7 @@
       }
     }
   };
-  var VERSION = "5.3.8";
+  var VERSION = "5.3.0";
   var BaseComponent = class extends Config2 {
     constructor(element, config2) {
       super();
@@ -10675,7 +10633,6 @@
         this[propertyName] = null;
       }
     }
-    // Private
     _queueCallback(callback, element, isAnimated = true) {
       executeAfterTransition(callback, element, isAnimated);
     }
@@ -10717,7 +10674,7 @@
       }
       selector = hrefAttribute && hrefAttribute !== "#" ? hrefAttribute.trim() : null;
     }
-    return selector ? selector.split(",").map((sel) => parseSelector(sel)).join(",") : null;
+    return parseSelector(selector);
   };
   var SelectorEngine = {
     find(selector, element = document.documentElement) {
@@ -11428,10 +11385,10 @@
       this._element.style[dimension] = "";
       this._queueCallback(complete, this._element, true);
     }
-    // Private
     _isShown(element = this._element) {
       return element.classList.contains(CLASS_NAME_SHOW$7);
     }
+    // Private
     _configAfterMerge(config2) {
       config2.toggle = Boolean(config2.toggle);
       config2.parent = getElement(config2.parent);
@@ -11640,7 +11597,7 @@
     }
     _createPopper() {
       if (typeof lib_exports === "undefined") {
-        throw new TypeError("Bootstrap's dropdowns require Popper (https://popper.js.org/docs/v2/)");
+        throw new TypeError("Bootstrap's dropdowns require Popper (https://popper.js.org)");
       }
       let referenceElement = this._element;
       if (this._config.reference === "parent") {
@@ -11715,7 +11672,7 @@
       }
       return {
         ...defaultBsPopperConfig,
-        ...execute(this._config.popperConfig, [void 0, defaultBsPopperConfig])
+        ...execute(this._config.popperConfig, [defaultBsPopperConfig])
       };
     }
     _selectMenuItem({
@@ -12527,10 +12484,7 @@
     br: [],
     col: [],
     code: [],
-    dd: [],
     div: [],
-    dl: [],
-    dt: [],
     em: [],
     hr: [],
     h1: [],
@@ -12696,7 +12650,7 @@
       return this._config.sanitize ? sanitizeHtml(arg, this._config.allowList, this._config.sanitizeFn) : arg;
     }
     _resolvePossibleFunction(arg) {
-      return execute(arg, [void 0, this]);
+      return execute(arg, [this]);
     }
     _putElementInTemplate(element, templateElement) {
       if (this._config.html) {
@@ -12777,7 +12731,7 @@
   var Tooltip = class _Tooltip extends BaseComponent {
     constructor(element, config2) {
       if (typeof lib_exports === "undefined") {
-        throw new TypeError("Bootstrap's tooltips require Popper (https://popper.js.org/docs/v2/)");
+        throw new TypeError("Bootstrap's tooltips require Popper (https://popper.js.org)");
       }
       super(element, config2);
       this._isEnabled = true;
@@ -12817,6 +12771,7 @@
       if (!this._isEnabled) {
         return;
       }
+      this._activeTrigger.click = !this._activeTrigger.click;
       if (this._isShown()) {
         this._leave();
         return;
@@ -12988,7 +12943,7 @@
       return offset2;
     }
     _resolvePossibleFunction(arg) {
-      return execute(arg, [this._element, this._element]);
+      return execute(arg, [this._element]);
     }
     _getPopperConfig(attachment) {
       const defaultBsPopperConfig = {
@@ -13024,7 +12979,7 @@
       };
       return {
         ...defaultBsPopperConfig,
-        ...execute(this._config.popperConfig, [void 0, defaultBsPopperConfig])
+        ...execute(this._config.popperConfig, [defaultBsPopperConfig])
       };
     }
     _setListeners() {
@@ -13033,7 +12988,6 @@
         if (trigger === "click") {
           EventHandler.on(this._element, this.constructor.eventName(EVENT_CLICK$1), this._config.selector, (event) => {
             const context = this._initializeOnDelegatedTarget(event);
-            context._activeTrigger[TRIGGER_CLICK] = !(context._isShown() && context._activeTrigger[TRIGGER_CLICK]);
             context.toggle();
           });
         } else if (trigger !== TRIGGER_MANUAL) {
@@ -13444,15 +13398,13 @@
   var ARROW_RIGHT_KEY = "ArrowRight";
   var ARROW_UP_KEY = "ArrowUp";
   var ARROW_DOWN_KEY = "ArrowDown";
-  var HOME_KEY = "Home";
-  var END_KEY = "End";
   var CLASS_NAME_ACTIVE = "active";
   var CLASS_NAME_FADE$1 = "fade";
   var CLASS_NAME_SHOW$1 = "show";
   var CLASS_DROPDOWN = "dropdown";
   var SELECTOR_DROPDOWN_TOGGLE = ".dropdown-toggle";
   var SELECTOR_DROPDOWN_MENU = ".dropdown-menu";
-  var NOT_SELECTOR_DROPDOWN_TOGGLE = `:not(${SELECTOR_DROPDOWN_TOGGLE})`;
+  var NOT_SELECTOR_DROPDOWN_TOGGLE = ":not(.dropdown-toggle)";
   var SELECTOR_TAB_PANEL = '.list-group, .nav, [role="tablist"]';
   var SELECTOR_OUTER = ".nav-item, .list-group-item";
   var SELECTOR_INNER = `.nav-link${NOT_SELECTOR_DROPDOWN_TOGGLE}, .list-group-item${NOT_SELECTOR_DROPDOWN_TOGGLE}, [role="tab"]${NOT_SELECTOR_DROPDOWN_TOGGLE}`;
@@ -13535,19 +13487,13 @@
       this._queueCallback(complete, element, element.classList.contains(CLASS_NAME_FADE$1));
     }
     _keydown(event) {
-      if (![ARROW_LEFT_KEY, ARROW_RIGHT_KEY, ARROW_UP_KEY, ARROW_DOWN_KEY, HOME_KEY, END_KEY].includes(event.key)) {
+      if (![ARROW_LEFT_KEY, ARROW_RIGHT_KEY, ARROW_UP_KEY, ARROW_DOWN_KEY].includes(event.key)) {
         return;
       }
       event.stopPropagation();
       event.preventDefault();
-      const children = this._getChildren().filter((element) => !isDisabled(element));
-      let nextActiveElement;
-      if ([HOME_KEY, END_KEY].includes(event.key)) {
-        nextActiveElement = children[event.key === HOME_KEY ? 0 : children.length - 1];
-      } else {
-        const isNext = [ARROW_RIGHT_KEY, ARROW_DOWN_KEY].includes(event.key);
-        nextActiveElement = getNextActiveElement(children, event.target, isNext, true);
-      }
+      const isNext = [ARROW_RIGHT_KEY, ARROW_DOWN_KEY].includes(event.key);
+      const nextActiveElement = getNextActiveElement(this._getChildren().filter((element) => !isDisabled(element)), event.target, isNext, true);
       if (nextActiveElement) {
         nextActiveElement.focus({
           preventScroll: true
@@ -18256,14 +18202,14 @@
 
 @hotwired/turbo/dist/turbo.es2017-esm.js:
   (*!
-  Turbo 8.0.19
-  Copyright © 2025 37signals LLC
+  Turbo 8.0.21
+  Copyright © 2026 37signals LLC
    *)
 
 bootstrap/dist/js/bootstrap.esm.js:
   (*!
-    * Bootstrap v5.3.8 (https://getbootstrap.com/)
-    * Copyright 2011-2025 The Bootstrap Authors (https://github.com/twbs/bootstrap/graphs/contributors)
+    * Bootstrap v5.3.0 (https://getbootstrap.com/)
+    * Copyright 2011-2023 The Bootstrap Authors (https://github.com/twbs/bootstrap/graphs/contributors)
     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
     *)
 */
