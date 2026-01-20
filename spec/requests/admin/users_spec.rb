@@ -54,6 +54,21 @@ RSpec.describe Admin::UsersController, type: :request do
         expect(flash[:success]).to be_present
       end
 
+      it "renders new with errors when creation fails" do
+        user_params = {
+          email: "",
+          first_name: "Test",
+          last_name: "User"
+        }
+
+        expect do
+          post admin_users_path, params: { user: user_params }
+        end.not_to change(User, :count)
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(flash[:error]).to be_present
+      end
+
       it "updates a user and redirects" do
         target_user = create(:user)
         updated_params = { first_name: "Updated" }
