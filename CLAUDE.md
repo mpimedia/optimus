@@ -96,6 +96,40 @@ Located in `app/components/` with namespace structure:
 - Two asset bundles: `admin.scss`/`admin.js` and `public.scss`/`public.js`
 - Stimulus controllers in `app/javascript/admin/controllers/` and `app/javascript/public/controllers/`
 
+### Admin Form Patterns
+
+**Select inputs must use tom-select** in admin forms for consistent UI:
+
+```erb
+<%= f.input :category_id,
+    as: :tom_select,
+    collection: Category.options_for_select,
+    label: 'Category',
+    prompt: 'Select a category...',
+    autocomplete: 'off',
+    wrapper: :tom_select_label_inset %>
+```
+
+For multi-select inputs, add `multiple: true`:
+
+```erb
+<%= f.input :tag_ids,
+    as: :tom_select,
+    collection: Tag.options_for_select,
+    label: 'Tags',
+    prompt: 'Select tags...',
+    autocomplete: 'off',
+    multiple: true,
+    wrapper: :tom_select_label_inset %>
+```
+
+**Other form inputs** use `wrapper: :floating_label_form`:
+- Text inputs: `<%= f.input :name, wrapper: :floating_label_form %>`
+- Text areas: `<%= f.input :notes, as: :text, wrapper: :floating_label_form %>`
+- Booleans: `<%= f.input :active, as: :boolean, wrapper: :floating_label_form %>`
+
+See `app/views/admin/system_groups/_form.html.erb` for reference.
+
 ### Testing
 
 - RSpec with FactoryBot
