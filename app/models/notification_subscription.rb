@@ -47,4 +47,8 @@ class NotificationSubscription < ApplicationRecord
   def self.default_sort
     [ created_at: :desc ]
   end
+
+  def name
+    "#{notification_topic.name} - #{user.full_name}"
+  end
 end

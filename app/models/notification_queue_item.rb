@@ -50,4 +50,8 @@ class NotificationQueueItem < ApplicationRecord
   def mark_distributed!
     update!(distributed_at: Time.current)
   end
+
+  def name
+    "#{user.full_name} - #{notification_message.subject.truncate(30)}"
+  end
 end

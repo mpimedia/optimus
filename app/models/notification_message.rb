@@ -29,4 +29,8 @@ class NotificationMessage < ApplicationRecord
   def self.default_sort
     [ created_at: :desc ]
   end
+
+  def name
+    subject.truncate(50)
+  end
 end

@@ -36,4 +36,8 @@ class NotificationTemplate < ApplicationRecord
   def self.default_sort
     [ distribution_method: :asc, created_at: :desc ]
   end
+
+  def name
+    "#{notification_topic.name} (#{distribution_method.titleize})"
+  end
 end
