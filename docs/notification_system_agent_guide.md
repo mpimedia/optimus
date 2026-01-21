@@ -206,6 +206,60 @@ Status: <%= status %>
 Amount: <%= amount %>
 ```
 
+### Triggering Without Model Instances
+
+You can trigger notifications **without** a persisted model instance. This is useful for:
+- Page view tracking (e.g., "report.viewed")
+- Form initiation (e.g., "screening_request.new")
+- Action tracking before model creation
+- Analytics events
+
+**Example: New action (no model instance yet)**
+```ruby
+class ScreeningRequestsController < ApplicationController
+  include Notifiable
+
+  def new
+    @screening_request = ScreeningRequest.new
+
+    # Notification with only plain values - no model needed
+    notify_topic("screening_request.new", context: {
+      user: current_user,           # Can still include User instance
+      timestamp: Time.current,
+      ip_address: request.remote_ip,
+      referrer: request.referer
+    })
+  end
+end
+```
+
+**Template for plain values:**
+```erb
+Subject: New Screening Request Initiated
+
+Body:
+<%= user.full_name %> started a screening request.
+Time: <%= timestamp.strftime('%Y-%m-%d %H:%M') %>
+IP: <%= ip_address %>
+<% if referrer.present? %>
+Referrer: <%= referrer %>
+<% end %>
+```
+
+**Direct job call (no Notifiable concern):**
+```ruby
+def index
+  NotifyTopicJob.perform_later(
+    topic_key: "reports.viewed",
+    context: {
+      user_name: current_user.full_name,
+      report_type: params[:type],
+      viewed_at: Time.current.to_s
+    }
+  )
+end
+```
+
 ### Conditional Content
 
 ```erb

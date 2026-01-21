@@ -301,6 +301,57 @@ Order #<%= order.id %> shipped to <%= customer.full_name %>
 Tracking: <%= tracking_number %>
 ```
 
+### Triggering Notifications Without Model Instances
+
+You don't need a persisted model instance to trigger notifications. This is useful for actions like page views, form initiations, or events before model creation.
+
+**Example: Notification on "new" action (before model exists)**
+```ruby
+class ScreeningRequestsController < ApplicationController
+  include Notifiable
+
+  def new
+    @screening_request = ScreeningRequest.new
+
+    # Trigger notification with just metadata - no model instance needed
+    notify_topic("screening_request.new", context: {
+      user: current_user,           # Can still include user
+      timestamp: Time.current,
+      ip_address: request.remote_ip,
+      referrer: request.referer
+    })
+  end
+end
+```
+
+**Example: Direct job call (no Notifiable concern needed)**
+```ruby
+def index
+  NotifyTopicJob.perform_later(
+    topic_key: "reports.viewed",
+    context: {
+      user_name: current_user.full_name,
+      user_email: current_user.email,
+      viewed_at: Time.current.to_s,
+      page: params[:page]
+    }
+  )
+end
+```
+
+**Template for plain values:**
+```erb
+Subject: Screening Request Initiated
+Body: <%= user.full_name %> started a new screening request at <%= timestamp %> from IP <%= ip_address %>.
+```
+
+**Key Points:**
+- The `context` hash is completely flexible
+- You can pass any combination of model instances and plain values
+- Model instances are automatically serialized/deserialized
+- Plain values (strings, numbers, times, etc.) are passed through as-is
+- Templates can access all context variables as local variables
+
 ---
 
 ## Existing Notification Topics
