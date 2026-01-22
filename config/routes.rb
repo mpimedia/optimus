@@ -38,7 +38,7 @@ Rails.application.routes.draw do
   namespace :admin do
     root to: "dashboard#index"
 
-    authenticate :user, lambda { |u| u.admin? } do
+    authenticate :user, lambda { |u| u.system_manager? } do
       mount Blazer::Engine, at: :blazer
       mount GoodJob::Engine, at: :good_job
       mount MaintenanceTasks::Engine, at: :maintenance_tasks

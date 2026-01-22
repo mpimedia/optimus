@@ -47,6 +47,10 @@ class User < ApplicationRecord
     false
   end
 
+  def system_manager?
+    system_groups.exists?(name: "System Managers")
+  end
+
   def self.options_for_select
     select_order.map { |user| [ user.last_name_first_name, user.id ] }
   end
