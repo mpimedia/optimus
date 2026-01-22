@@ -57,6 +57,30 @@ RSpec.describe User, type: :model do
     end
   end
 
+  describe "#system_manager?" do
+    it "returns true when user belongs to System Managers group" do
+      user = create(:user)
+      system_managers = SystemGroup.create!(name: "System Managers")
+      SystemGroupUser.create!(system_group: system_managers, user: user)
+
+      expect(user.reload.system_manager?).to be(true)
+    end
+
+    it "returns false when user does not belong to System Managers group" do
+      user = create(:user)
+      other_group = SystemGroup.create!(name: "Regular Users")
+      SystemGroupUser.create!(system_group: other_group, user: user)
+
+      expect(user.reload.system_manager?).to be(false)
+    end
+
+    it "returns false when user has no groups" do
+      user = create(:user)
+
+      expect(user.system_manager?).to be(false)
+    end
+  end
+
   describe "#access_authorized?" do
     let(:user) { create(:user) }
     let(:system_group) { SystemGroup.create!(name: "Operations") }

@@ -38,7 +38,7 @@ Rails.application.routes.draw do
   namespace :admin do
     root to: "dashboard#index"
 
-    authenticate :user, lambda { |u| u.admin? } do
+    authenticate :user, lambda { |u| u.system_manager? } do
       mount Blazer::Engine, at: :blazer
       mount GoodJob::Engine, at: :good_job
       mount MaintenanceTasks::Engine, at: :maintenance_tasks
@@ -60,6 +60,12 @@ Rails.application.routes.draw do
         put :trigger_password_reset_email
       end
     end
+
+    resources :notification_topics, concerns: [:archivable, :collection_exportable]
+    resources :notification_templates, concerns: :archivable
+    resources :notification_subscriptions, concerns: [:archivable, :collection_exportable]
+    resources :notification_messages, only: [:index, :show], concerns: :collection_exportable
+    resources :notification_queue_items, only: [:index, :show], concerns: :collection_exportable
   end
 
   namespace :api, defaults: { format: "json" } do

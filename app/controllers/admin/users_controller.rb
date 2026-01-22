@@ -22,9 +22,16 @@ class Admin::UsersController < AdminController
     params[:user][:confirmed_at] = DateTime.current
     instance = controller_class.create(create_params)
 
-    instance.log(user: current_user, operation: action_name, meta: params.to_json)
-    flash[:success] = "New #{instance.class_name_title} successfully created"
-    redirect_to polymorphic_path([ :admin, instance ])
+    if instance.persisted?
+      instance.log(user: current_user, operation: action_name, meta: params.to_json)
+      instance.notify_topic("user.created", context: { user: instance, created_by: current_user })
+      flash[:success] = "New #{instance.class_name_title} successfully created"
+      redirect_to polymorphic_path([ :admin, instance ])
+    else
+      @instance = instance
+      flash.now[:error] = instance.errors.full_messages.to_sentence
+      render :new, status: :unprocessable_entity
+    end
   end
 
   def edit
@@ -47,8 +54,19 @@ class Admin::UsersController < AdminController
     instance.archive
 
     instance.log(user: current_user, operation: action_name)
+    instance.notify_topic("user.archived", context: { user: instance, archived_by: current_user })
     flash[:danger] = "#{instance.class_name_title} successfully deleted"
     redirect_to polymorphic_path([ :admin, controller_class ])
+  end
+
+  def trigger_password_reset_email
+    instance = controller_class.find(params[:id])
+    instance.send_reset_password_instructions
+
+    instance.log(user: current_user, operation: action_name)
+    instance.notify_topic("user.password_changed", context: { user: instance, changed_by: current_user })
+    flash[:success] = "Password reset email sent to #{instance.email}"
+    redirect_to polymorphic_path([ :admin, instance ])
   end
 
   def collection_export_xlsx

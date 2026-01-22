@@ -2,6 +2,17 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Required Workflow
+
+**ALWAYS run these checks before committing or pushing:**
+
+```bash
+bundle exec rubocop -a    # Fix lint errors
+bundle exec rspec         # Run all tests
+```
+
+Both must pass before any `git commit` or `git push`. No exceptions.
+
 ## Setup After Cloning
 
 ### MCP Configuration
@@ -97,6 +108,40 @@ Located in `app/components/` with namespace structure:
 - Two asset bundles: `admin.scss`/`admin.js` and `public.scss`/`public.js`
 - Stimulus controllers in `app/javascript/admin/controllers/` and `app/javascript/public/controllers/`
 
+### Admin Form Patterns
+
+**Select inputs must use tom-select** in admin forms for consistent UI:
+
+```erb
+<%= f.input :category_id,
+    as: :tom_select,
+    collection: Category.options_for_select,
+    label: 'Category',
+    prompt: 'Select a category...',
+    autocomplete: 'off',
+    wrapper: :tom_select_label_inset %>
+```
+
+For multi-select inputs, add `multiple: true`:
+
+```erb
+<%= f.input :tag_ids,
+    as: :tom_select,
+    collection: Tag.options_for_select,
+    label: 'Tags',
+    prompt: 'Select tags...',
+    autocomplete: 'off',
+    multiple: true,
+    wrapper: :tom_select_label_inset %>
+```
+
+**Other form inputs** use `wrapper: :floating_label_form`:
+- Text inputs: `<%= f.input :name, wrapper: :floating_label_form %>`
+- Text areas: `<%= f.input :notes, as: :text, wrapper: :floating_label_form %>`
+- Booleans: `<%= f.input :active, as: :boolean, wrapper: :floating_label_form %>`
+
+See `app/views/admin/system_groups/_form.html.erb` for reference.
+
 ### Testing
 
 - RSpec with FactoryBot
@@ -118,6 +163,77 @@ Located in `app/components/` with namespace structure:
 
 - `Archivable` - Soft delete via `archived_at` timestamp
 - `Loggable` - Audit logging to `data_logs` table
+- `Notifiable` - Trigger notifications via Topic/Subscriber pattern
+
+### Enumerable Pattern
+
+For enumerable constants (status values, type options, categories):
+
+1. **Define constants in `app/modules/`** (e.g., `app/modules/order_statuses.rb`):
+   ```ruby
+   module OrderStatuses
+     PENDING = "pending".freeze
+     SHIPPED = "shipped".freeze
+     DELIVERED = "delivered".freeze
+
+     def self.all
+       [PENDING, SHIPPED, DELIVERED]
+     end
+
+     def self.options_for_select
+       all.map { |item| [item.titleize, item] }
+     end
+   end
+   ```
+
+2. **Create a concern in `app/models/concerns/`** that references the module (e.g., `has_order_status.rb`):
+   ```ruby
+   module HasOrderStatus
+     extend ActiveSupport::Concern
+
+     included do
+       validates :status, presence: true, inclusion: { in: OrderStatuses.all }
+     end
+
+     class_methods do
+       def statuses
+         OrderStatuses.all
+       end
+     end
+   end
+   ```
+
+3. **Models include the concern**, not the module directly
+4. **Write tests for modules** in `spec/modules/`
+
+See `app/modules/notification_distribution_methods.rb` and `app/models/concerns/has_distribution_method.rb` for reference.
+
+### Notification System
+
+A custom Topic/Subscriber notification system (see `docs/notification_system.md` for full documentation):
+
+**Quick Usage:**
+```ruby
+# In a controller action, trigger a notification
+@instance.notify_topic("resource.action", context: { model: @instance, actor: current_user })
+```
+
+**Components:**
+- `NotificationTopic` - Types of notifications (e.g., "user.created")
+- `NotificationTemplate` - ERB templates for rendering content
+- `NotificationSubscription` - Links users to topics with delivery preferences
+- `NotificationMessage` - Rendered notification content
+- `NotificationQueueItem` - Delivery scheduling and status
+
+**Delivery Frequencies:** immediate, summarized_hourly, summarized_daily
+
+**Adding New Notifications:**
+1. Create topic in `db/seeds/notification_topics.rb`
+2. Include `Notifiable` in model
+3. Call `notify_topic("topic.key", context: {...})` in controller
+4. Run `rails db:seed`
+
+See `docs/notification_system_agent_guide.md` for detailed implementation patterns.
 
 ### Mounted Engines (Admin)
 
