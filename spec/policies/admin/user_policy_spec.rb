@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-describe Admin::UserPolicy do
+describe Admin::UserPolicy, type: :policy do
   include_context 'policy_setup'
 
   describe '#index?' do

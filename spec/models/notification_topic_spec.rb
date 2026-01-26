@@ -1,6 +1,4 @@
 require "rails_helper"
-require "concerns/archivable_shared"
-require "concerns/loggable_shared"
 
 RSpec.describe NotificationTopic, type: :model do
   it_behaves_like "archivable"
