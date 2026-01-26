@@ -6,9 +6,6 @@ RSpec.describe "Admin Users CRUD", type: :feature do
   let(:system_role) { create(:system_role) }
 
   before do
-    # Add notes accessor to User if not present (used in form but not in model)
-    User.class_eval { attr_accessor :notes } unless User.method_defined?(:notes)
-
     %w[index show new create edit update destroy archive unarchive].each do |operation|
       permission = create(:system_permission,
         name: "User #{operation.titleize}",
