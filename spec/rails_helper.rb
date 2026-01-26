@@ -12,11 +12,9 @@ require 'rspec/rails'
 require 'capybara/rspec'
 require 'pundit/rspec'
 require 'rake'
-require 'rspec/rails'
 require 'shoulda/matchers'
 require 'vcr'
 require 'webmock/rspec'
-include RSpec::Longrun::DSL
 
 # Add additional requires below this line. Rails is not loaded until this point!
 
@@ -79,11 +77,11 @@ RSpec.configure do |config|
   config.use_transactional_fixtures = true
 
   config.mock_with :rspec do |c|
-    c.syntax = %i[should expect]
+    c.syntax = :expect
   end
 
   config.expect_with :rspec do |c|
-    c.syntax = %i[should expect]
+    c.syntax = :expect
   end
 
   config.after do

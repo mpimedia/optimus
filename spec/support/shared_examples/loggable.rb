@@ -1,5 +1,3 @@
-require 'rails_helper'
-
 RSpec.shared_examples 'loggable' do
   it 'creates a log based on the user and action' do
     instance_of_class = create(described_class.to_s.underscore.to_sym)

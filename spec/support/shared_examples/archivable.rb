@@ -1,5 +1,3 @@
-require 'rails_helper'
-
 RSpec.shared_examples 'archivable' do
   it 'is active by default' do
     instance_of_class = create(described_class.to_s.underscore.to_sym)
