@@ -622,7 +622,7 @@
     morphChildren: () => morphChildren,
     morphElements: () => morphElements,
     morphTurboFrameElements: () => morphTurboFrameElements,
-    navigator: () => navigator,
+    navigator: () => sessionNavigator,
     registerAdapter: () => registerAdapter,
     renderStreamMessage: () => renderStreamMessage,
     session: () => session,
@@ -5237,7 +5237,7 @@
     }
   };
   var session = new Session(recentRequests);
-  var { cache, navigator } = session;
+  var { cache, navigator: sessionNavigator } = session;
   function start() {
     session.start();
   }
@@ -5282,14 +5282,14 @@
   }
   var Turbo = /* @__PURE__ */ Object.freeze({
     __proto__: null,
-    navigator,
-    session,
-    cache,
     PageRenderer,
     PageSnapshot,
     FrameRenderer,
     fetch: fetchWithTurboHeaders,
     config,
+    session,
+    cache,
+    navigator: sessionNavigator,
     start,
     registerAdapter,
     visit,
@@ -8629,7 +8629,7 @@
 
 @hotwired/turbo/dist/turbo.es2017-esm.js:
   (*!
-  Turbo 8.0.21
+  Turbo 8.0.23
   Copyright © 2026 37signals LLC
    *)
 */
