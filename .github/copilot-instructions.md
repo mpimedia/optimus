@@ -37,11 +37,8 @@ This file provides guidance for GitHub Copilot coding agents working with the Op
 
 ### Setup
 ```bash
-# Clone with submodules (important for shared standards)
-git clone --recurse-submodules https://github.com/mpimedia/optimus.git
-
-# Or if already cloned
-git submodule update --init --recursive
+# Clone the repository
+git clone https://github.com/mpimedia/optimus.git
 
 # Install dependencies
 bundle install
@@ -347,6 +344,14 @@ Use conventional commits:
 - `test:` - Testing
 - `refactor:` - Code refactoring
 
+### Agent Attribution (Required — No Exceptions)
+
+Every AI agent **must** include attribution on all work it produces:
+- **Commits**: `Co-Authored-By: GitHub Copilot <noreply@github.com>` (or the appropriate agent name/model)
+- **PRs**: Agent name in the PR description footer
+- **Issue/PR Comments**: Brief attribution line (e.g., `— GitHub Copilot`)
+- If multiple agents contribute, include a `Co-Authored-By` line for each.
+
 ### Code Review Checklist
 - [ ] Tests pass (`bundle exec rspec`)
 - [ ] Linting passes (`bundle exec rubocop`)
@@ -485,11 +490,8 @@ def index
 end
 ```
 
-### 2. Submodules
-This repo uses git submodules for shared standards:
-```bash
-git submodule update --init --recursive
-```
+### 2. Agent Configuration
+Agent configuration files live in `.claude/` (Claude Code), `.github/copilot-instructions.md` (Copilot), and `CLAUDE.md`. Architecture documentation is in `docs/architecture/`.
 
 ### 3. Asset Pipeline
 Assets are in `app/assets/builds/` (gitignored). Run `yarn build` before testing:
