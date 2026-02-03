@@ -6,10 +6,14 @@ Create an implementation plan for GitHub issue #$ARGUMENTS based on the chosen o
 2. **Break down the work** into discrete, ordered tasks
 3. **Identify files to create or modify** for each task
 4. **Determine the test strategy** — what specs to write or update, referencing patterns in `spec/support/shared_contexts/`
-5. **Determine the workflow**:
+5. **Determine the development environment**:
+   - Evaluate whether this work should use **git worktrees** or **worktrunk** (`wt`) instead of a simple branch:
+     - **Simple branch** — Single-focus work, small scope, one agent
+     - **Worktree** (`git worktree add`) — Use when work needs isolation from the main working directory (e.g., long-running feature alongside hotfixes, or parallel agents that each need their own checkout)
+     - **Worktrunk** (`wt create`) — Use when managing multiple worktrees with shared hooks, configuration, and automated commit message generation. Preferred for multi-agent parallel work.
    - Branch naming: `feature/`, `fix/`, `chore/`, or `docs/` prefix
    - Whether parallel agents would help (independent tasks across different files/systems)
-   - Whether worktrees are needed (large changes that benefit from isolation)
+   - If parallel agents are recommended, each agent should get its own worktree via `wt create <branch-name>`
 6. **Check for risks** — migration safety, authorization changes, breaking changes to existing behavior
 7. **Write the plan** in a structured format
 
@@ -22,8 +26,10 @@ The plan should include:
 ```markdown
 ## Implementation Plan
 
-### Workflow
+### Development Environment
+- Environment: [simple branch | git worktree | worktrunk]
 - Branch: `feature/issue-NNN-description`
+- Worktrees needed: [none | list of worktree branches and their purpose]
 - Agent strategy: [single agent | parallel agents with breakdown]
 - Estimated scope: [files to change, specs to write]
 
