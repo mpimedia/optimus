@@ -68,7 +68,10 @@ By default, GoodJob runs inside the web process. For production scale:
 
 1. Uncomment the `servers.job` section in `deploy.yml`
 2. Point job servers to the same database
-3. Configure GoodJob execution mode (`async` for in-process, `external` for separate worker)
+3. Set the execution mode via environment variable or config:
+   - `GOOD_JOB_EXECUTION_MODE=async` — run jobs inside the web process (default)
+   - `GOOD_JOB_EXECUTION_MODE=external` — run jobs in a separate worker process
+   - Or configure in `config/environments/production.rb`: `config.good_job.execution_mode = :external`
 
 ## Deployment Commands
 
