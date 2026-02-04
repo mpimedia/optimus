@@ -342,6 +342,13 @@ After cloning, create `.mcp.json` (gitignored) in the project root:
       "headers": {
         "Authorization": "Bearer YOUR_GITHUB_TOKEN"
       }
+    },
+    "heroku": {
+      "command": "npx",
+      "args": ["-y", "@heroku/mcp-server"],
+      "env": {
+        "HEROKU_API_KEY": "YOUR_HEROKU_API_KEY"
+      }
     }
   }
 }
@@ -349,6 +356,7 @@ After cloning, create `.mcp.json` (gitignored) in the project root:
 
 - **Context7** — Up-to-date library documentation. Get an API key from [Context7](https://context7.com).
 - **GitHub** — Structured GitHub API access for issues, PRs, reviews, and cross-repo operations. Use a GitHub token from `gh auth token`.
+- **Heroku** — App management, logs, database info, and scaling. Get a token from `heroku auth:token`.
 
 ## Plugins
 
