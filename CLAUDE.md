@@ -282,7 +282,7 @@ See `docs/notification_system.md` and `docs/notification_system_agent_guide.md` 
   - `controller_setup` — User with full permissions for controller specs
   - `policy_setup` — User with full permissions for policy specs
 - `login_user` macro available for authentication in specs
-- Bullet detects N+1 queries in development (alerts) and test (raises errors)
+- Bullet detects N+1 queries in development (alerts) and test (logs warnings)
 - Rubocop uses **rubocop-rails-omakase** with `rubocop-rspec`, `rubocop-capybara`, `rubocop-factory_bot` plugins
 
 ## Key Gems
@@ -294,7 +294,7 @@ See `docs/notification_system.md` and `docs/notification_system_agent_guide.md` 
 - **Pagy** — Pagination
 - **maintenance_tasks** — Data maintenance scripts
 - **caxlsx_rails** — Excel exports
-- **Bullet** — N+1 query detection (development alerts, test failures)
+- **Bullet** — N+1 query detection (development alerts, test logging)
 - **SimpleCov** — Test coverage enforcement (90% target, ratchet-up)
 - **strong_migrations** — Migration safety checks
 
