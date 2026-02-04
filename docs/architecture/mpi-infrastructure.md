@@ -2,6 +2,8 @@
 
 This document is the single source of truth for how MPI Media's shared infrastructure — repositories, agent configuration, HC workflows, CI/CD, and standards — fits together. It serves both human collaborators (HCs) and AI collaborators (ACs).
 
+**HCs:** If you're looking for a focused guide on your role, workflow commands, and what to review, see [docs/hc-guide.md](../hc-guide.md) instead.
+
 ## Terminology
 
 | Abbreviation | Meaning | Examples |
