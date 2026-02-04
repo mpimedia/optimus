@@ -59,18 +59,16 @@ The main Kamal configuration defines:
 | Variable | Source | Purpose |
 |----------|--------|---------|
 | `RAILS_MASTER_KEY` | `.kamal/secrets` | Decrypts Rails credentials |
-| `SOLID_QUEUE_IN_PUMA` | `deploy.yml` | Runs background jobs in the Puma process |
 | `WEB_CONCURRENCY` | `deploy.yml` | Number of Puma worker processes |
-| `JOB_CONCURRENCY` | `deploy.yml` | Number of Solid Queue worker threads |
 | `DB_HOST` | `deploy.yml` | PostgreSQL server address |
 
 ### Splitting Web and Worker
 
-By default, Solid Queue runs inside Puma (`SOLID_QUEUE_IN_PUMA: true`). For production scale:
+By default, GoodJob runs inside the web process. For production scale:
 
-1. Set `SOLID_QUEUE_IN_PUMA: false`
-2. Uncomment the `servers.job` section in `deploy.yml`
-3. Point job servers to the same database
+1. Uncomment the `servers.job` section in `deploy.yml`
+2. Point job servers to the same database
+3. Configure GoodJob execution mode (`async` for in-process, `external` for separate worker)
 
 ## Deployment Commands
 
